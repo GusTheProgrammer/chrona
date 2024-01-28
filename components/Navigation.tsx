@@ -176,17 +176,22 @@ const Navigation = () => {
   )
 
   return (
-    <div className='flex-none'>
-      <ul className='px-1 w-full'>
-        {!userInfo.id && (
-          <li>
-            <Link href='/auth/login'>Login</Link>
-          </li>
-        )}
-      </ul>
-      {userInfo.id && auth}
-    </div>
+      <div className='flex-none'>
+        <ul className='flex px-1 w-full'>
+          {!userInfo.id && (
+              <>
+                <li className='mr-2'>
+                  <Link href='/auth/login'>Login</Link>
+                </li>
+                <li>
+                  <Link href='/auth/register'>Register</Link>
+                </li>
+              </>
+          )}
+        </ul>
+        {userInfo.id && auth}
+      </div>
   )
 }
 
-export default dynamic(() => Promise.resolve(Navigation), { ssr: false })
+export default dynamic(() => Promise.resolve(Navigation), {ssr: false})
