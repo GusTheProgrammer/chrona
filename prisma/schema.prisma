@@ -1,5 +1,6 @@
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["views"]
 }
 
 datasource db {
@@ -137,6 +138,21 @@ model Holiday {
   updatedAt DateTime @updatedAt
 
   @@map("holidays")
+}
+
+view SchedulerCalendar {
+  scheduler_id String    @id
+  datestamp    DateTime
+  fullname     String?
+  email        String?
+  team_name    String?
+  shift_name   String?
+  shift_color  String?
+  shift_code   String?
+  start_time   DateTime?
+  end_time     DateTime?
+
+  @@map("SchedulerCalendar")
 }
 
 enum Method {
