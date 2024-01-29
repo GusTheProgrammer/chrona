@@ -23,8 +23,12 @@ model User {
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
 
-  role   Role   @relation(fields: [roleId], references: [id], onDelete: Restrict)
-  roleId String
+  role      Role        @relation(fields: [roleId], references: [id], onDelete: Restrict)
+  roleId    String
+  Team      Team?       @relation(fields: [teamId], references: [id])
+  teamId    String?     @db.VarChar(21)
+  Scheduler Scheduler[]
+  Holiday   Holiday[]
 
   @@map("users")
 }
@@ -72,6 +76,67 @@ model ClientPermission {
   role Role[]
 
   @@map("client_permissions")
+}
+
+model Team {
+  id          String   @id @default(dbgenerated("nanoid()")) @db.VarChar(21)
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  users     User[]
+  Scheduler Scheduler[]
+
+  @@map("teams")
+}
+
+model Scheduler {
+  id      String   @id @default(dbgenerated("nanoid()")) @db.VarChar(21)
+  userId  String
+  teamId  String
+  shiftId String
+  date    DateTime
+
+  user  User  @relation(fields: [userId], references: [id])
+  team  Team  @relation(fields: [teamId], references: [id])
+  shift Shift @relation(fields: [shiftId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("schedulers")
+}
+
+model Shift {
+  id        String   @id @default(dbgenerated("nanoid()")) @db.VarChar(21)
+  name      String
+  color     String
+  code      String   @unique
+  startTime DateTime
+  endTime   DateTime
+
+  schedulers Scheduler[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("shifts")
+}
+
+model Holiday {
+  id        String   @id @default(dbgenerated("nanoid()")) @db.VarChar(21)
+  userId    String
+  startDate DateTime
+  endDate   DateTime
+  reason    String?
+
+  user User @relation(fields: [userId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("holidays")
 }
 
 enum Method {
