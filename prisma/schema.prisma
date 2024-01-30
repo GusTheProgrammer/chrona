@@ -143,9 +143,11 @@ model Holiday {
 view SchedulerCalendar {
   scheduler_id String    @id
   datestamp    DateTime
+  user_id      String?
   fullname     String?
   email        String?
   team_name    String?
+  team_id      String?
   shift_name   String?
   shift_color  String?
   shift_code   String?

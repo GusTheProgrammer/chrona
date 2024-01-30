@@ -13,7 +13,7 @@ const Page = () => {
     const [page, setPage] = useState(1); // Define state for page
     const [limit, setLimit] = useState(25); // Define state for limit
     const [q, setQ] = useState(""); // Define state for query
-
+    const userId = 'MjuLCGMJ2kbMvH_ruwos2'
     const editHandler = (item) => {
         // Define your edit logic here
     };
@@ -22,10 +22,12 @@ const Page = () => {
         // Define your delete logic here
     };
 
+
+
     const getApi = useApi({
-        key: ['scheduler'], // Update this to match your view
+        key: ['scheduler'],
         method: 'GET',
-        url: `scheduler`, // Update this to match your view
+        url: `scheduler?userId=${userId}&page=${page}&limit=${limit}&q=${q}`,
     })?.get
 
     return (
