@@ -5,29 +5,28 @@ import dynamic from "next/dynamic";
 import Message from "@/components/Message";
 import { TopLoadingBar } from "@/components/TopLoadingBar";
 import Spinner from "@/components/Spinner";
-import RTable from "@/components/RTable";
-import { columns } from "@/app/(site)/calendar/columns";
 import React, { useState } from "react";
+import Scheduler from "@/components/Scheduler";
 
 const Page = () => {
     const [page, setPage] = useState(1); // Define state for page
-    const [limit, setLimit] = useState(25); // Define state for limit
+    const [limit, setLimit] = useState(7); // Define state for limit
     const [q, setQ] = useState(""); // Define state for query
-    const userId = 'MjuLCGMJ2kbMvH_ruwos2'
-    const editHandler = (item) => {
-        // Define your edit logic here
+    const teamId = 'a75POUlJzMDmaJtz0JCxa'
+    const handlePrev = () => {
+        if (page > 1) setPage(page - 1);
     };
 
-    const deleteHandler = (item) => {
-        // Define your delete logic here
+    const handleNext = () => {
+        setPage(page + 1);
     };
 
 
 
     const getApi = useApi({
-        key: ['scheduler'],
+        key: ['scheduler', page],
         method: 'GET',
-        url: `scheduler?userId=${userId}&page=${page}&limit=${limit}&q=${q}`,
+        url: `scheduler?teamId=${teamId}&page=${page}&limit=${limit}&q=${q}`,
     })?.get
 
     return (
@@ -40,23 +39,23 @@ const Page = () => {
                 <Message value={getApi?.error} />
             ) : (
                 <div className='overflow-x-auto bg-white p-3 mt-2'>
-                    <RTable
-                        data={getApi?.data}
-                        columns={columns({
-                            editHandler,
-                            deleteHandler,
-                        })}
-                        setPage={setPage}
-                        setLimit={setLimit}
-                        limit={limit}
-                        q={q}
-                        setQ={setQ}
-                        caption='Scheduler Calendar'
-                    />
+                    <div className="container mx-auto p-4">
+                        <Scheduler response={getApi.data}/>
+                        <div className="flex justify-between mt-4">
+                            <button onClick={handlePrev}
+                                    className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-700">
+                                Previous
+                            </button>
+                            <button onClick={handleNext}
+                                    className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-700">
+                                Next
+                            </button>
+                        </div>
+                    </div>
                 </div>
             )}
         </>
     )
 }
 
-export default dynamic(() => Promise.resolve(Page), { ssr: false })
+export default dynamic(() => Promise.resolve(Page), {ssr: false})
