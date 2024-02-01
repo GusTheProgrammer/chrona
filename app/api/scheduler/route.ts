@@ -5,7 +5,7 @@ import { prisma } from '@/lib/prisma.db';
 
 export async function GET(req: Request) {
     try {
-        // await isAuth(req);
+        await isAuth(req);
 
         const { searchParams } = new URL(req.url);
         const teamId = searchParams.get('teamId'); // Get the team ID from query params

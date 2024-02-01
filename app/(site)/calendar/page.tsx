@@ -21,6 +21,10 @@ const Page = () => {
         setPage(page + 1);
     };
 
+    const onUpdate = (id) => {
+        console.log(id)
+
+    }
 
 
     const getApi = useApi({
@@ -40,7 +44,7 @@ const Page = () => {
             ) : (
                 <div className='overflow-x-auto bg-white p-3 mt-2'>
                     <div className="container mx-auto p-4">
-                        <Scheduler response={getApi.data}/>
+                        <Scheduler response={getApi.data} wfmShifts={[{shift_id: 1,shift_name:'working'}, {shift_id: 2,shift_name:'not'}]} updateShift={(id)=> console.log(id)} />
                         <div className="flex justify-between mt-4">
                             <button onClick={handlePrev}
                                     className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-700">

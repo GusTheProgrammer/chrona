@@ -1,6 +1,12 @@
+import { Item } from '@radix-ui/react-dropdown-menu';
 import React from 'react';
+import { useState } from 'react';
 
-const Scheduler = ({ response }) => {
+const Scheduler = ({ response , wfmShifts, updateShift}) => {
+    const [state, updateState] = useState({
+        edit: false,
+        selectedCell: null,
+    });
     const data = response.data;
     if (!data) return <div>Loading...</div>;
 
@@ -17,6 +23,33 @@ const Scheduler = ({ response }) => {
     if (headers.length === 0) {
         return <div>No data available</div>;
     }
+
+    const setEdit = (cell : string) => {
+        updateShift(cell)
+       updateState({edit: true, selectedCell: cell});
+      };
+
+
+      const populateEditMenu = (selected) => (
+        <select 
+          className="shift-menu"
+          onKeyUp={(e) => console.log(e)}
+        //   onChange={(e) => this.handleUpdate(e)}
+        >
+          <option defaultValue={selected}>{selected}</option>
+          {wfmShifts.map(
+            (item) =>
+              item.shift_name !== selected && (
+                <option key={item.shift_id} value={item.shift_id}>
+                  {item.shift_name}
+                </option>
+              )
+          )}
+          {/* <option value="custom">Create Shift</option> */}
+        </select>
+      );
+
+
 
     return (
         <div className="overflow-x-auto">
@@ -41,8 +74,10 @@ const Scheduler = ({ response }) => {
                                 <td key={dateIndex}
                                     className="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
                                     style={{ backgroundColor: shift ? shift.shift_color : 'transparent', color: "white"}}
-                                    title={shift ? `Start: ${new Date(shift.start_time).toLocaleTimeString()}, End: ${new Date(shift.end_time).toLocaleTimeString()}` : ''}>
-                                    {shift ? shift.shift_name : ''}
+                                    title={shift ? `Start: ${new Date(shift.start_time).toLocaleTimeString()}, End: ${new Date(shift.end_time).toLocaleTimeString()}` : ''}
+                                    onDoubleClick={() => setEdit(shift.scheduler_id)}>
+                                    {shift.scheduler_id === state?.selectedCell ? populateEditMenu(shift.shift_name) : shift.shift_name}
+                
                                 </td>
                             );
                         })}

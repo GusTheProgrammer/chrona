@@ -1,0 +1,10 @@
+{
+    "name": "Chrona",
+    "dockerComposeFile": "./docker-compose.yml",
+    "service": "local-dev",
+    "workspaceFolder": "/home/build/app",
+    "forwardPorts": [3000, 5432,5050],
+    "extensions": ["dbaeumer.vscode-eslint"],
+    "remoteUser": "build"
+  }
+  
