@@ -1,0 +1,9 @@
+version: '3.8'
+services:
+  local-dev:
+    image: ghaithchaal/node-local-dev:latest
+    volumes:
+      - ..:/home/build/app:cached
+    environment:
+      - DATABASE_URL=postgres://postgres:password@db:5432/mydataba
+    command: sleep infinity
