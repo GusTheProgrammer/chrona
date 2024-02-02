@@ -5,11 +5,13 @@ services:
     volumes:
       - ..:/home/build/app:cached
     environment:
-      - DATABASE_URL=postgres://postgres:password@db:5432/mydataba
+      - DATABASE_URL=postgresql://myuser:mypassword@postgres:5432/chrona
     command: sleep infinity
     depends_on:
       - postgres
       - pgadmin
+    networks:
+      - postgres
 
   postgres:
     container_name: postgres_container
