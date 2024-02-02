@@ -9,7 +9,11 @@
     5050
   ],
   "extensions": [
-    "dbaeumer.vscode-eslint"
+    "dbaeumer.vscode-eslint",
+    "ms-azuretools.vscode-docker",
+    "vscode-icons-team.vscode-icons",
+    "bradlc.vscode-tailwindcss",
+    "esbenp.prettier-vscode"
   ],
   "remoteUser": "build",
   "runArgs": [
