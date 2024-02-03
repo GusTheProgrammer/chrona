@@ -13,7 +13,8 @@
     "ms-azuretools.vscode-docker",
     "vscode-icons-team.vscode-icons",
     "bradlc.vscode-tailwindcss",
-    "esbenp.prettier-vscode"
+    "esbenp.prettier-vscode",
+    "prisma.prisma",
   ],
   "remoteUser": "build",
   "runArgs": [

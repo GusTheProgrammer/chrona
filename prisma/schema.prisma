@@ -113,7 +113,7 @@ model Shift {
   id        String   @id @default(dbgenerated("nanoid()")) @db.VarChar(21)
   name      String
   color     String
-  code      String   @unique
+  code      Int
   startTime DateTime
   endTime   DateTime
 
@@ -148,9 +148,10 @@ view SchedulerCalendar {
   email        String?
   team_name    String?
   team_id      String?
+  shift_id     String?
   shift_name   String?
   shift_color  String?
-  shift_code   String?
+  shift_code   Int?
   start_time   DateTime?
   end_time     DateTime?
 
