@@ -1,35 +1,20 @@
 "use client";
 
-import React, { useState } from "react";
-import dynamic from "next/dynamic";
+import React, { useEffect, useState } from "react";
 import useApi from "@/hooks/useApi";
-import Message from "@/components/Message";
-import { TopLoadingBar } from "@/components/TopLoadingBar";
-import Spinner from "@/components/Spinner";
-import Scheduler from "@/components/Scheduler";
-import { useQueryClient } from "@tanstack/react-query";
+import { DataTable } from "@/components/DataTable";
+import dynamic from "next/dynamic";
+import { generateColumns } from "./columns"; // make sure to export generateColumns from columns.tsx
 
 const Page = () => {
   const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
   const [limit, setLimit] = useState(7);
   const [q, setQ] = useState("");
+  const [dynamicColumns, setDynamicColumns] = useState([]); // State to hold the dynamic columns
+  const [transformedData, setTransformedData] = useState([]); // State for the transformed data
+
   const teamId = "a75POUlJzMDmaJtz0JCxa";
-  const wfmShifts = [
-    { shift_id: 1, shift_name: "Working from Office" },
-    { shift_id: 2, shift_name: "Working from Home" },
-    { shift_id: 3, shift_name: "Vacation" },
-    { shift_id: 4, shift_name: "Sick Leave" },
-    { shift_id: 5, shift_name: "Personal Time" },
-  ];
-
-  const [selectedShift, setSelectedShift] = useState(null);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [selectedShiftName, setSelectedShiftName] = useState(
-    wfmShifts[0]?.shift_name
-  );
-  const [selectedCell, setSelectedCell] = useState(null);
-
-  const queryClient = useQueryClient();
 
   const getApi = useApi({
     key: ["scheduler", page],
@@ -37,90 +22,62 @@ const Page = () => {
     url: `scheduler?teamId=${teamId}&page=${page}&limit=${limit}&q=${q}`,
   })?.get;
 
-  const putApi = useApi({
-    key: ["scheduler"],
-    method: "PUT",
-    url: "scheduler",
-  })?.put;
+  // This function flattens the data object into an array of rows
+  function transformData(apiResponse) {
+    // Create a map to easily update the records based on fullname
+    const recordsMap = new Map();
 
-  const handleUpdateShift = async (updatedShiftData) => {
-    try {
-      await putApi.mutateAsync({
-        id: selectedShift.scheduler_id,
-        ...updatedShiftData,
+    // Iterate over each date key in the response
+    Object.entries(apiResponse.data).forEach(([date, entries]) => {
+      entries.forEach((entry) => {
+        const { fullname, shift_name } = entry;
+
+        // If the record for this fullname does not exist, create it
+        if (!recordsMap.has(fullname)) {
+          recordsMap.set(fullname, { fullname });
+        }
+
+        // Retrieve the existing record from the map
+        const record = recordsMap.get(fullname);
+
+        // Add or update the status for the specific date
+        record[date] = shift_name || ""; // Use "Off" or any other default value you need
       });
-      queryClient.invalidateQueries(["scheduler", page]);
-    } catch (error) {
-      console.error("Error updating shift:", error);
+    });
+
+    // Convert the map values to an array
+    return Array.from(recordsMap.values());
+  }
+
+  // useEffect to update the columns when the data changes
+  useEffect(() => {
+    if (getApi?.data) {
+      // Call generateColumns with the API response data
+      const newData = transformData(getApi.data);
+      setTransformedData(newData);
+
+      const newColumns = generateColumns(getApi.data);
+      setDynamicColumns(newColumns);
+
+      setTotalPages(getApi.data.pages); // Set total pages from API response
     }
-  };
+  }, [getApi?.data]); // Dependency array to only re-run when getApi.data changes
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    const updatedShiftData = {
-      shift_name: selectedShiftName,
-      start_time: e.target.start_time.value,
-      end_time: e.target.end_time.value,
-    };
-    handleUpdateShift(updatedShiftData);
-    setIsDialogOpen(false);
-  };
-
-  const openDialog = (shift) => {
-    setSelectedShift(shift);
-    setIsDialogOpen(true);
-  };
-
-  // Navigation handlers
-  const handlePrev = () => {
-    if (page > 1) setPage(page - 1);
-  };
-
-  const handleNext = () => {
-    setPage(page + 1);
-  };
+  const data = getApi?.data?.data; // Assuming the actual table data is within the 'data' property of the response
 
   return (
-    // Existing JSX with modifications to pass new props to Scheduler
-    <>
-      <TopLoadingBar isFetching={getApi?.isFetching || getApi?.isPending} />
-      {getApi?.isPending ? (
-        <Spinner />
-      ) : getApi?.isError ? (
-        <Message value={getApi?.error} />
-      ) : (
-        <div className="overflow-x-auto bg-white p-3 mt-2">
-          <div className="container mx-auto p-4">
-            <Scheduler
-              response={getApi.data}
-              wfmShifts={wfmShifts}
-              page={page}
-              isDialogOpen={isDialogOpen}
-              setIsDialogOpen={setIsDialogOpen}
-              selectedShiftName={selectedShiftName}
-              setSelectedShiftName={setSelectedShiftName}
-              handleSubmit={handleSubmit}
-              openDialog={openDialog}
-              selectedCell={selectedCell}
-            />
-            <div className="flex justify-between mt-4">
-              <button
-                onClick={handlePrev}
-                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-700"
-              >
-                Previous
-              </button>
-              <button
-                onClick={handleNext}
-                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-700"
-              >
-                Next
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </>
+    <div>
+      {/* Pass the dynamic columns and data to the DataTable */}
+      <DataTable
+        columns={dynamicColumns}
+        data={transformedData}
+        page={page}
+        setPage={setPage}
+        totalPages={totalPages}
+        limit={limit}
+        setLimit={setLimit}
+      />
+    </div>
   );
 };
 
