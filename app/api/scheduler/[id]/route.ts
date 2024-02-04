@@ -8,7 +8,7 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
-    await isAuth(req);
+    await isAuth(req, params);
 
     const schedulerId = params.id;
 
