@@ -1,180 +1,265 @@
-import { Item } from "@radix-ui/react-dropdown-menu";
-import React from "react";
-import { useState } from "react";
-import useApi from "@/hooks/useApi";
-import { Button } from "@/components/ui/button";
+"use client";
+import * as React from "react";
+
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  ColumnDef,
+  ColumnFiltersState,
+  SortingState,
+  VisibilityState,
+  flexRender,
+  getCoreRowModel,
+  getFilteredRowModel,
+  getPaginationRowModel,
+  getSortedRowModel,
+  useReactTable,
+} from "@tanstack/react-table";
+
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+
+import { CalendarIcon } from "@radix-ui/react-icons";
 
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuLabel,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
-  DropdownMenuSeparator,
+  DropdownMenuCheckboxItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { useQueryClient } from "@tanstack/react-query";
 
-const Scheduler = ({
-  response,
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@/components/ui/hover-card";
+
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+
+import { DataTablePagination } from "@/components/DataTablePagination";
+import SchedulerEditPopover from "@/components/SchedulerEditPopover";
+interface SchedulerProps<TData, TValue> {
+  columns: ColumnDef<TData, TValue>[];
+  data: TData[];
+}
+
+export function Scheduler<TData, TValue>({
+  columns,
+  data,
+  page,
+  setPage,
+  limit,
+  setLimit,
+  totalPages,
   wfmShifts,
-  isDialogOpen,
-  setIsDialogOpen,
+  isPopoverOpen,
+  setIsPopoverOpen,
   selectedShift,
   handleSubmit,
-  openDialog,
+  openPopover,
   selectedCell,
   selectedShiftName,
   setSelectedShiftName,
-}) => {
-  const data = response?.data;
+}: SchedulerProps<TData, TValue>) {
+  const [sorting, setSorting] = React.useState<SortingState>([]);
+  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
+    []
+  );
 
-  if (!data) return <div>Loading...</div>;
+  const [columnVisibility, setColumnVisibility] =
+    React.useState<VisibilityState>({});
 
-  // Extract unique employees and headers
-  const employees = new Set();
-  Object.values(data).forEach((dateShifts) => {
-    dateShifts.forEach((shift) => employees.add(shift.fullname));
+  const table = useReactTable({
+    data,
+    columns,
+    state: {
+      sorting,
+      columnFilters,
+      columnVisibility,
+      pagination: {
+        pageIndex: page - 1,
+        pageSize: limit,
+      },
+    },
+    pageCount: totalPages - 1,
+    manualPagination: true, // Since we're handling pagination server-side
+    getCoreRowModel: getCoreRowModel(),
+    onSortingChange: setSorting,
+    getSortedRowModel: getSortedRowModel(),
+    onColumnFiltersChange: setColumnFilters,
+    getFilteredRowModel: getFilteredRowModel(),
+    onColumnVisibilityChange: setColumnVisibility,
   });
 
-  const headers = Object.keys(data);
+  const hasData = data && data.length > 0;
 
-  if (headers.length === 0) {
-    return <div>No data available</div>;
-  }
   return (
-    <div className="overflow-x-auto">
-      <table className="min-w-full divide-y divide-gray-200">
-        <thead className="bg-gray-50">
-          <tr>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Employee
-            </th>
-            {headers.map((date, index) => (
-              <th
-                key={index}
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-              >
-                {new Date(date).toLocaleDateString()}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody className="bg-white divide-y divide-gray-200">
-          {[...employees].map((employee, rowIndex) => (
-            <tr key={rowIndex}>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {employee}
-              </td>
-              {headers.map((date, dateIndex) => {
-                const shift = data[date].find(
-                  (shift) => shift.fullname === employee
-                );
+    <>
+      <div className="flex items-center py-4">
+        <Input
+          placeholder="Filter by Name..."
+          value={
+            (table.getColumn("fullname")?.getFilterValue() as string) ?? ""
+          }
+          onChange={(event) =>
+            table.getColumn("fullname")?.setFilterValue(event.target.value)
+          }
+          className="max-w-sm"
+        />
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" className="ml-auto">
+              Columns
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            {table
+              .getAllColumns()
+              .filter((column) => column.getCanHide())
+              .map((column) => {
                 return (
-                  <td
-                    key={dateIndex}
-                    className="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
-                    style={{
-                      backgroundColor: shift
-                        ? shift.shift_color
-                        : "transparent",
-                      color: "white",
-                    }}
-                    title={
-                      shift
-                        ? `Start: ${new Date(
-                            shift.start_time
-                          ).toLocaleTimeString()}, End: ${new Date(
-                            shift.end_time
-                          ).toLocaleTimeString()}`
-                        : ""
+                  <DropdownMenuCheckboxItem
+                    key={column.id}
+                    className="capitalize"
+                    checked={column.getIsVisible()}
+                    onCheckedChange={(value) =>
+                      column.toggleVisibility(!!value)
                     }
-                    onDoubleClick={() => openDialog(shift)}
                   >
-                    {console.log(shift)}
-                    {shift.scheduler_id === selectedCell
-                      ? populateEditMenu(shift.shift_name)
-                      : shift.shift_name}
-                  </td>
+                    {column.id}
+                  </DropdownMenuCheckboxItem>
                 );
               })}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Edit Shift</DialogTitle>
-            <DialogDescription>
-              Update the shift details. Click save when you're done.
-            </DialogDescription>
-          </DialogHeader>
-          <form onSubmit={handleSubmit} className="grid gap-4 py-4">
-            {/* Form Fields */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline">Select Shift</Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56">
-                <DropdownMenuLabel>Shift Selection</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuRadioGroup
-                  value={selectedShiftName}
-                  onValueChange={setSelectedShiftName}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+      {/* Table */}
+      <div className="rounded-md border">
+        <Table>
+          <TableHeader>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <TableRow key={headerGroup.id}>
+                {headerGroup.headers.map((header) => {
+                  return (
+                    <TableHead key={header.id}>
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(
+                            header.column.columnDef.header,
+                            header.getContext()
+                          )}
+                    </TableHead>
+                  );
+                })}
+              </TableRow>
+            ))}
+          </TableHeader>
+          <TableBody>
+            {hasData ? (
+              table.getRowModel().rows.map((row) => (
+                <TableRow
+                  key={row.id}
+                  data-state={row.getIsSelected() && "selected"}
                 >
-                  {wfmShifts.map((shift) => (
-                    <DropdownMenuRadioItem
-                      key={shift.shift_id}
-                      value={shift.shift_name}
-                    >
-                      {shift.shift_name}
-                    </DropdownMenuRadioItem>
-                  ))}
-                </DropdownMenuRadioGroup>
-              </DropdownMenuContent>
-            </DropdownMenu>
+                  {row.getVisibleCells().map((cell) => {
+                    const cellData = cell.row.original[cell.column.id];
 
-            <Label htmlFor="start_time" className="text-right">
-              Start Time
-            </Label>
-            <Input
-              id="start_time"
-              name="start_time"
-              type="datetime-local"
-              defaultValue={selectedShift?.start_time}
-              className="col-span-3"
-            />
+                    if (cellData && typeof cellData === "object") {
+                      return (
+                        <TableCell
+                          key={cell.id}
+                          onDoubleClick={(event) => {
+                            if (cellData.scheduler_id) {
+                              openPopover(cellData, event);
+                            }
+                          }}
+                        >
+                          <HoverCard>
+                            <HoverCardTrigger asChild>
+                              <span>
+                                {cellData ? cellData.shift_name : "No Shift"}
+                              </span>
+                            </HoverCardTrigger>
 
-            <Label htmlFor="end_time" className="text-right">
-              End Time
-            </Label>
-            <Input
-              id="end_time"
-              name="end_time"
-              type="datetime-local"
-              defaultValue={selectedShift?.end_time}
-              className="col-span-3"
-            />
+                            <HoverCardContent className="w-80">
+                              <div className="flex justify-between space-x-4">
+                                <div className="space-y-1">
+                                  <h4 className="text-sm font-semibold">
+                                    Shift Details
+                                  </h4>
+                                  <div className="flex items-center pt-2">
+                                    <CalendarIcon className="mr-2 h-4 w-4 opacity-70" />{" "}
+                                    <span className="text-medium">
+                                      Start Time:{" "}
+                                      {new Date(
+                                        cellData.start_time
+                                      ).toLocaleTimeString()}
+                                    </span>
+                                  </div>
 
-            <DialogFooter>
-              <Button type="submit">Save changes</Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
-    </div>
+                                  <div className="flex items-center pt-2">
+                                    <CalendarIcon className="mr-2 h-4 w-4 opacity-70" />{" "}
+                                    <span className="text-medium">
+                                      End Time:{" "}
+                                      {new Date(
+                                        cellData.end_time
+                                      ).toLocaleTimeString()}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                            </HoverCardContent>
+                          </HoverCard>
+                        </TableCell>
+                      );
+                    } else {
+                      return (
+                        <TableCell key={cell.id}>
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext()
+                          )}
+                        </TableCell>
+                      );
+                    }
+                  })}
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-24 text-center"
+                >
+                  No results.
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
+      {/* Pagination */}
+      <DataTablePagination
+        table={table}
+        setPage={setPage}
+        setLimit={setLimit}
+      />
+      {/* Popover */}
+      <SchedulerEditPopover
+        isPopoverOpen={isPopoverOpen}
+        setIsPopoverOpen={setIsPopoverOpen}
+        handleSubmit={handleSubmit}
+        wfmShifts={wfmShifts}
+        selectedShiftName={selectedShiftName}
+        setSelectedShiftName={setSelectedShiftName}
+        selectedShift={selectedShift}
+        position={selectedCell}
+      />
+    </>
   );
-};
-
-export default Scheduler;
+}

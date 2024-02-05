@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import useApi from "@/hooks/useApi";
-import { DataTable } from "@/components/DataTable";
+import { Scheduler } from "@/components/Scheduler";
 import dynamic from "next/dynamic";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -68,12 +68,16 @@ const Page = () => {
     setIsPopoverOpen(false);
   };
 
-  const openPopover = (shift) => {
+  const openPopover = (shift, event) => {
+    const rect = event.target.getBoundingClientRect();
+    setSelectedCell({
+      top: rect.top + window.scrollY,
+      left: rect.left + window.scrollX,
+    });
     setSelectedShift(shift);
     setIsPopoverOpen(true);
   };
 
-  // This function flattens the data object into an array of rows
   function transformData(apiResponse) {
     const recordsMap = new Map();
 
@@ -86,32 +90,27 @@ const Page = () => {
         }
 
         const record = recordsMap.get(fullname);
-        record[date] = entry; // Store the entire entry
+        record[date] = entry;
       });
     });
 
     return Array.from(recordsMap.values());
   }
-  // useEffect to update the columns when the data changes
   useEffect(() => {
     if (getApi?.data) {
-      // Call generateColumns with the API response data
       const newData = transformData(getApi.data);
       setTransformedData(newData);
 
       const newColumns = generateColumns(getApi.data);
       setDynamicColumns(newColumns);
 
-      setTotalPages(getApi.data.pages); // Set total pages from API response
+      setTotalPages(getApi.data.pages);
     }
-  }, [getApi?.data]); // Dependency array to only re-run when getApi.data changes
-
-  const data = getApi?.data?.data; // Assuming the actual table data is within the 'data' property of the response
+  }, [getApi?.data]);
 
   return (
     <div>
-      {/* Pass the dynamic columns and data to the DataTable */}
-      <DataTable
+      <Scheduler
         columns={dynamicColumns}
         data={transformedData}
         page={page}
@@ -123,6 +122,7 @@ const Page = () => {
         isPopoverOpen={isPopoverOpen}
         setIsPopoverOpen={setIsPopoverOpen}
         selectedShiftName={selectedShiftName}
+        selectedShift={selectedShift}
         setSelectedShiftName={setSelectedShiftName}
         handleSubmit={handleSubmit}
         openPopover={openPopover}
