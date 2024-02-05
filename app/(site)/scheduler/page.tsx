@@ -4,7 +4,9 @@ import React, { useEffect, useState } from "react";
 import useApi from "@/hooks/useApi";
 import { DataTable } from "@/components/DataTable";
 import dynamic from "next/dynamic";
-import { generateColumns } from "./columns"; // make sure to export generateColumns from columns.tsx
+import { useQueryClient } from "@tanstack/react-query";
+
+import { generateColumns } from "./columns";
 
 const Page = () => {
   const [page, setPage] = useState(1);
@@ -13,8 +15,23 @@ const Page = () => {
   const [q, setQ] = useState("");
   const [dynamicColumns, setDynamicColumns] = useState([]); // State to hold the dynamic columns
   const [transformedData, setTransformedData] = useState([]); // State for the transformed data
-
   const teamId = "a75POUlJzMDmaJtz0JCxa";
+  const wfmShifts = [
+    { shift_id: 1, shift_name: "Working from Office" },
+    { shift_id: 2, shift_name: "Working from Home" },
+    { shift_id: 3, shift_name: "Vacation" },
+    { shift_id: 4, shift_name: "Sick Leave" },
+    { shift_id: 5, shift_name: "Personal Time" },
+  ];
+
+  const [selectedShift, setSelectedShift] = useState(null);
+  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
+  const [selectedShiftName, setSelectedShiftName] = useState(
+    wfmShifts[0]?.shift_name
+  );
+  const [selectedCell, setSelectedCell] = useState(null);
+
+  const queryClient = useQueryClient();
 
   const getApi = useApi({
     key: ["scheduler", page],
@@ -22,33 +39,59 @@ const Page = () => {
     url: `scheduler?teamId=${teamId}&page=${page}&limit=${limit}&q=${q}`,
   })?.get;
 
+  const putApi = useApi({
+    key: ["scheduler"],
+    method: "PUT",
+    url: "scheduler",
+  })?.put;
+
+  const handleUpdateShift = async (updatedShiftData) => {
+    try {
+      await putApi.mutateAsync({
+        id: selectedShift.scheduler_id,
+        ...updatedShiftData,
+      });
+      queryClient.invalidateQueries(["scheduler", page]);
+    } catch (error) {
+      console.error("Error updating shift:", error);
+    }
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const updatedShiftData = {
+      shift_name: selectedShiftName,
+      start_time: e.target.start_time.value,
+      end_time: e.target.end_time.value,
+    };
+    handleUpdateShift(updatedShiftData);
+    setIsPopoverOpen(false);
+  };
+
+  const openPopover = (shift) => {
+    setSelectedShift(shift);
+    setIsPopoverOpen(true);
+  };
+
   // This function flattens the data object into an array of rows
   function transformData(apiResponse) {
-    // Create a map to easily update the records based on fullname
     const recordsMap = new Map();
 
-    // Iterate over each date key in the response
     Object.entries(apiResponse.data).forEach(([date, entries]) => {
       entries.forEach((entry) => {
-        const { fullname, shift_name } = entry;
+        const { fullname } = entry;
 
-        // If the record for this fullname does not exist, create it
         if (!recordsMap.has(fullname)) {
           recordsMap.set(fullname, { fullname });
         }
 
-        // Retrieve the existing record from the map
         const record = recordsMap.get(fullname);
-
-        // Add or update the status for the specific date
-        record[date] = shift_name || ""; // Use "Off" or any other default value you need
+        record[date] = entry; // Store the entire entry
       });
     });
 
-    // Convert the map values to an array
     return Array.from(recordsMap.values());
   }
-
   // useEffect to update the columns when the data changes
   useEffect(() => {
     if (getApi?.data) {
@@ -76,6 +119,14 @@ const Page = () => {
         totalPages={totalPages}
         limit={limit}
         setLimit={setLimit}
+        wfmShifts={wfmShifts}
+        isPopoverOpen={isPopoverOpen}
+        setIsPopoverOpen={setIsPopoverOpen}
+        selectedShiftName={selectedShiftName}
+        setSelectedShiftName={setSelectedShiftName}
+        handleSubmit={handleSubmit}
+        openPopover={openPopover}
+        selectedCell={selectedCell}
       />
     </div>
   );

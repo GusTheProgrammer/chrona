@@ -101,6 +101,7 @@ const Scheduler = ({
                     }
                     onDoubleClick={() => openDialog(shift)}
                   >
+                    {console.log(shift)}
                     {shift.scheduler_id === selectedCell
                       ? populateEditMenu(shift.shift_name)
                       : shift.shift_name}

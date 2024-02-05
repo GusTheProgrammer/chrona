@@ -25,15 +25,30 @@ import {
 
 import {
   DropdownMenu,
-  DropdownMenuCheckboxItem,
   DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
+  DropdownMenuCheckboxItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 
 import { DataTablePagination } from "@/components/DataTablePagination";
-
+import SchedulerEditPopover from "@/components/SchedulerEditPopover";
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
@@ -47,6 +62,15 @@ export function DataTable<TData, TValue>({
   limit,
   setLimit,
   totalPages,
+  wfmShifts,
+  isPopoverOpen,
+  setIsPopoverOpen,
+  selectedShift,
+  handleSubmit,
+  openPopover,
+  selectedCell,
+  selectedShiftName,
+  setSelectedShiftName,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
@@ -148,14 +172,37 @@ export function DataTable<TData, TValue>({
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
                 >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </TableCell>
-                  ))}
+                  {row.getVisibleCells().map((cell) => {
+                    const cellData = cell.row.original[cell.column.id];
+
+                    // Check if cellData is an object and not null
+                    if (cellData && typeof cellData === "object") {
+                      // Render a specific property like 'shift_name' or the entire object as a string
+                      return (
+                        <TableCell
+                          key={cell.id}
+                          onDoubleClick={() => {
+                            // Double click logic here
+                            if (cellData.scheduler_id) {
+                              openPopover(cellData);
+                            }
+                          }}
+                        >
+                          {cellData ? cellData.shift_name : "No Shift"}
+                        </TableCell>
+                      );
+                    } else {
+                      // Use flexRender for normal cell rendering
+                      return (
+                        <TableCell key={cell.id}>
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext()
+                          )}
+                        </TableCell>
+                      );
+                    }
+                  })}
                 </TableRow>
               ))
             ) : (
@@ -176,6 +223,16 @@ export function DataTable<TData, TValue>({
         table={table}
         setPage={setPage}
         setLimit={setLimit}
+      />
+      {/* Popover */}
+      <SchedulerEditPopover
+        isPopoverOpen={isPopoverOpen}
+        setIsPopoverOpen={setIsPopoverOpen}
+        handleSubmit={handleSubmit}
+        wfmShifts={wfmShifts}
+        selectedShiftName={selectedShiftName}
+        setSelectedShiftName={setSelectedShiftName}
+        selectedShift={selectedShift}
       />
     </>
   );
