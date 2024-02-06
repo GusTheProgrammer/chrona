@@ -1,26 +1,26 @@
-'use client'
+"use client";
 
-import moment from 'moment'
+import moment from "moment";
 
 const Footer = () => {
-  const year = moment().format('YYYY')
+  const year = moment().format("YYYY");
   return (
-    <footer className='footer footer-center text-center font-light flex justify-center items-center bg-white text-base-content h-[68px]'>
+    <footer className="footer footer-center text-center font-light flex justify-center items-center text-base-content h-[68px]">
       <div>
-        <p className='text-gray-400'>
+        <p className="text-gray-400">
           Copyright © {year} - Developed by
           <a
-            className='mx-1 font-bold'
-            target='_blank'
-            href='https://chrona.me'
-            rel='noreferrer'
+            className="mx-1 font-bold"
+            target="_blank"
+            href="https://chrona.me"
+            rel="noreferrer"
           >
             Chrona
           </a>
         </p>
       </div>
     </footer>
-  )
-}
+  );
+};
 
-export default Footer
+export default Footer;
