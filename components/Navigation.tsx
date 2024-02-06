@@ -1,9 +1,10 @@
-'use client'
-import useUserInfoStore from '@/zustand/userStore'
-import dynamic from 'next/dynamic'
-import Link from 'next/link'
-import React, { Fragment } from 'react'
-import { FaBars, FaPowerOff } from 'react-icons/fa6'
+"use client";
+import useUserInfoStore from "@/zustand/userStore";
+import dynamic from "next/dynamic";
+import Link from "next/link";
+import React, { Fragment } from "react";
+import { FaBars, FaPowerOff } from "react-icons/fa6";
+import { ModeToggle } from "@/components/ModeToggle";
 
 import {
   DropdownMenu,
@@ -11,8 +12,8 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Menubar,
   MenubarContent,
@@ -24,47 +25,50 @@ import {
   MenubarSub,
   MenubarSubContent,
   MenubarSubTrigger,
-} from '@/components/ui/menubar'
+} from "@/components/ui/menubar";
 
 const Navigation = () => {
-  const { userInfo } = useUserInfoStore((state) => state)
-  const [menu, setMenu] = React.useState<any>(userInfo.menu)
+  const { userInfo } = useUserInfoStore((state) => state);
+  const [menu, setMenu] = React.useState<any>(userInfo.menu);
 
   const handleLogout = () => {
-    useUserInfoStore.getState().logout()
-  }
+    useUserInfoStore.getState().logout();
+  };
 
   React.useEffect(() => {
-    const label = document.querySelector(`[data-drawer-target="bars"]`)
+    const label = document.querySelector(`[data-drawer-target="bars"]`);
     if (userInfo.id) {
-      setMenu(userInfo.menu)
-      label?.classList.remove('hidden')
+      setMenu(userInfo.menu);
+      label?.classList.remove("hidden");
     } else {
-      label?.classList.add('hidden')
+      label?.classList.add("hidden");
     }
-  }, [userInfo])
+  }, [userInfo]);
 
   const capitalizeFirstLetter = (string: string) => {
-    return string.charAt(0).toUpperCase() + string.slice(1)
-  }
+    return string.charAt(0).toUpperCase() + string.slice(1);
+  };
 
   const auth = (
     <>
-      <div className='hidden lg:block flex-row'>
-        <ul className='px-1 flex space-x-4 items-center'>
+      <div className="hidden lg:block flex-row">
+        <ul className="px-1 flex space-x-4 items-center">
+          <li>
+            <ModeToggle />
+          </li>
           {menu.map((item: any, i: number) => (
             <Fragment key={i}>
               {!item?.children && <Link href={item.path}>{item.name}</Link>}
 
               {item?.children && (
                 <DropdownMenu key={item.name}>
-                  <DropdownMenuTrigger className='outline-none'>
+                  <DropdownMenuTrigger className="outline-none">
                     {capitalizeFirstLetter(item.name)}
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent className='hidden lg:block'>
+                  <DropdownMenuContent className="hidden lg:block">
                     {item.children.map((child: any, i: number) => (
                       <DropdownMenuItem key={i}>
-                        <Link href={child.path} className='justify-between'>
+                        <Link href={child.path} className="justify-between">
                           {child.name}
                         </Link>
                       </DropdownMenuItem>
@@ -76,7 +80,7 @@ const Navigation = () => {
           ))}
 
           <DropdownMenu>
-            <DropdownMenuTrigger className='outline-none'>
+            <DropdownMenuTrigger className="outline-none">
               <Avatar>
                 <AvatarImage
                   src={
@@ -87,9 +91,9 @@ const Navigation = () => {
                 <AvatarFallback>AI</AvatarFallback>
               </Avatar>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className='hidden lg:block'>
+            <DropdownMenuContent className="hidden lg:block">
               <DropdownMenuItem>
-                <Link href='/account/profile' className='justify-between'>
+                <Link href="/account/profile" className="justify-between">
                   Profile
                 </Link>
               </DropdownMenuItem>
@@ -97,8 +101,8 @@ const Navigation = () => {
               <DropdownMenuItem>
                 <button onClick={() => handleLogout()}>
                   <Link
-                    href='/auth/login'
-                    className='flex justify-start items-center flex-row gap-x-1 text-red-500'
+                    href="/auth/login"
+                    className="flex justify-start items-center flex-row gap-x-1 text-red-500"
                   >
                     <FaPowerOff /> <span>Logout</span>
                   </Link>
@@ -109,16 +113,16 @@ const Navigation = () => {
         </ul>
       </div>
 
-      <div className='lg:hidden'>
-        <Menubar className='border-none lg:hidden'>
+      <div className="lg:hidden">
+        <Menubar className="border-none lg:hidden">
           <MenubarMenu>
             <MenubarTrigger>
-              <FaBars className='text-gray-500 text-2xl' />
+              <FaBars className="text-gray-500 text-2xl" />
             </MenubarTrigger>
-            <MenubarContent className='lg:hidden'>
+            <MenubarContent className="lg:hidden">
               <ul>
                 <MenubarItem>
-                  <Link href='/account/profile' className='justify-between'>
+                  <Link href="/account/profile" className="justify-between">
                     Profile
                   </Link>
                 </MenubarItem>
@@ -132,16 +136,16 @@ const Navigation = () => {
 
                     {item?.children && (
                       <MenubarSub key={item.name}>
-                        <MenubarSubTrigger className='px-2 py-1.5 text-sm flex flex-row items-center outline-none'>
+                        <MenubarSubTrigger className="px-2 py-1.5 text-sm flex flex-row items-center outline-none">
                           {capitalizeFirstLetter(item.name)}
                         </MenubarSubTrigger>
                         <MenubarPortal>
-                          <MenubarSubContent className='bg-white p-1 rounded-md border border-gray-200 w-auto z-50 lg:hidden'>
+                          <MenubarSubContent className="p-1 rounded-md border border-gray-200 w-auto z-50 lg:hidden">
                             {item.children.map((child: any, i: number) => (
                               <MenubarItem key={i}>
                                 <Link
                                   href={child.path}
-                                  className='justify-between'
+                                  className="justify-between"
                                 >
                                   {child.name}
                                 </Link>
@@ -159,8 +163,8 @@ const Navigation = () => {
                   <li>
                     <button onClick={() => handleLogout()}>
                       <Link
-                        href='/auth/login'
-                        className='flex justify-start items-center flex-row gap-x-1 text-red-500'
+                        href="/auth/login"
+                        className="flex justify-start items-center flex-row gap-x-1 text-red-500"
                       >
                         <FaPowerOff /> <span>Logout</span>
                       </Link>
@@ -173,25 +177,28 @@ const Navigation = () => {
         </Menubar>
       </div>
     </>
-  )
+  );
 
   return (
-      <div className='flex-none'>
-        <ul className='flex px-1 w-full'>
-          {!userInfo.id && (
-              <>
-                <li className='mr-2'>
-                  <Link href='/auth/login'>Login</Link>
-                </li>
-                <li>
-                  <Link href='/auth/register'>Register</Link>
-                </li>
-              </>
-          )}
-        </ul>
-        {userInfo.id && auth}
-      </div>
-  )
-}
+    <div className="flex-none">
+      <ul className="flex px-1 w-full">
+        {!userInfo.id && (
+          <>
+            <li className="mr-2">
+              <Link href="/auth/login">Login</Link>
+            </li>
+            <li>
+              <Link href="/auth/register">Register</Link>
+            </li>
+            <li className="mx-2">
+              <ModeToggle />
+            </li>
+          </>
+        )}
+      </ul>
+      {userInfo.id && auth}
+    </div>
+  );
+};
 
-export default dynamic(() => Promise.resolve(Navigation), {ssr: false})
+export default dynamic(() => Promise.resolve(Navigation), { ssr: false });

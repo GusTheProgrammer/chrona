@@ -1,29 +1,56 @@
 "use client";
 
-import React, { useState } from "react";
-import dynamic from "next/dynamic";
+import React, { useEffect, useState } from "react";
 import useApi from "@/hooks/useApi";
-import Message from "@/components/Message";
-import { TopLoadingBar } from "@/components/TopLoadingBar";
-import Spinner from "@/components/Spinner";
-import Scheduler from "@/components/Scheduler";
+import { Scheduler } from "@/components/Scheduler";
+import dynamic from "next/dynamic";
 import { useQueryClient } from "@tanstack/react-query";
+
+import { generateColumns } from "./columns";
 
 const Page = () => {
   const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
   const [limit, setLimit] = useState(7);
   const [q, setQ] = useState("");
+  const [dynamicColumns, setDynamicColumns] = useState([]); // State to hold the dynamic columns
+  const [transformedData, setTransformedData] = useState([]); // State for the transformed data
   const teamId = "a75POUlJzMDmaJtz0JCxa";
   const wfmShifts = [
-    { shift_id: 1, shift_name: "Working from Office" },
-    { shift_id: 2, shift_name: "Working from Home" },
-    { shift_id: 3, shift_name: "Vacation" },
-    { shift_id: 4, shift_name: "Sick Leave" },
-    { shift_id: 5, shift_name: "Personal Time" },
+    {
+      shift_id: 1,
+      shift_name: "Working from Office",
+      color:
+        "bg-blue-400 dark:bg-transparent dark:bg-gradient-to-r dark:from-cyan-500 dark:to-blue-500",
+    },
+    {
+      shift_id: 2,
+      shift_name: "Working from Home",
+      color:
+        "bg-purple-400 dark:bg-transparent dark:bg-gradient-to-r dark:from-purple-500 dark:to-pink-500",
+    },
+    {
+      shift_id: 3,
+      shift_name: "Vacation",
+      color:
+        "bg-red-400 dark:bg-transparent dark:bg-gradient-to-r dark:from-red-500 dark:to-orange-500",
+    },
+    {
+      shift_id: 4,
+      shift_name: "Sick Leave",
+      color:
+        "bg-yellow-400 dark:bg-transparent dark:bg-gradient-to-r dark:from-yellow-500 dark:to-lime-500",
+    },
+    {
+      shift_id: 5,
+      shift_name: "Personal Time",
+      color:
+        "bg-green-400 dark:bg-transparent dark:bg-gradient-to-r dark:from-green-500 dark:to-teal-500",
+    },
   ];
 
   const [selectedShift, setSelectedShift] = useState(null);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const [selectedShiftName, setSelectedShiftName] = useState(
     wfmShifts[0]?.shift_name
   );
@@ -57,70 +84,79 @@ const Page = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    const shift = wfmShifts.find((s) => s.shift_name === selectedShiftName);
+    const shiftColor = shift ? shift.color : null;
     const updatedShiftData = {
       shift_name: selectedShiftName,
       start_time: e.target.start_time.value,
       end_time: e.target.end_time.value,
+      shift_color: shiftColor,
     };
     handleUpdateShift(updatedShiftData);
-    setIsDialogOpen(false);
+    setIsPopoverOpen(false);
   };
 
-  const openDialog = (shift) => {
+  const openPopover = (shift, event) => {
+    const rect = event.target.getBoundingClientRect();
+    setSelectedCell({
+      top: rect.top + window.scrollY,
+      left: rect.left + window.scrollX,
+    });
     setSelectedShift(shift);
-    setIsDialogOpen(true);
+    setIsPopoverOpen(true);
   };
 
-  // Navigation handlers
-  const handlePrev = () => {
-    if (page > 1) setPage(page - 1);
-  };
+  function transformData(apiResponse) {
+    const recordsMap = new Map();
 
-  const handleNext = () => {
-    setPage(page + 1);
-  };
+    Object.entries(apiResponse.data).forEach(([date, entries]) => {
+      entries.forEach((entry) => {
+        const { fullname } = entry;
+
+        if (!recordsMap.has(fullname)) {
+          recordsMap.set(fullname, { fullname });
+        }
+
+        const record = recordsMap.get(fullname);
+        record[date] = entry;
+      });
+    });
+
+    return Array.from(recordsMap.values());
+  }
+  useEffect(() => {
+    if (getApi?.data) {
+      const newData = transformData(getApi.data);
+      setTransformedData(newData);
+
+      const newColumns = generateColumns(getApi.data);
+      setDynamicColumns(newColumns);
+
+      setTotalPages(getApi.data.pages);
+    }
+  }, [getApi?.data]);
 
   return (
-    // Existing JSX with modifications to pass new props to Scheduler
-    <>
-      <TopLoadingBar isFetching={getApi?.isFetching || getApi?.isPending} />
-      {getApi?.isPending ? (
-        <Spinner />
-      ) : getApi?.isError ? (
-        <Message value={getApi?.error} />
-      ) : (
-        <div className="overflow-x-auto bg-white p-3 mt-2">
-          <div className="container mx-auto p-4">
-            <Scheduler
-              response={getApi.data}
-              wfmShifts={wfmShifts}
-              page={page}
-              isDialogOpen={isDialogOpen}
-              setIsDialogOpen={setIsDialogOpen}
-              selectedShiftName={selectedShiftName}
-              setSelectedShiftName={setSelectedShiftName}
-              handleSubmit={handleSubmit}
-              openDialog={openDialog}
-              selectedCell={selectedCell}
-            />
-            <div className="flex justify-between mt-4">
-              <button
-                onClick={handlePrev}
-                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-700"
-              >
-                Previous
-              </button>
-              <button
-                onClick={handleNext}
-                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-700"
-              >
-                Next
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </>
+    <div>
+      <Scheduler
+        columns={dynamicColumns}
+        data={transformedData}
+        page={page}
+        setPage={setPage}
+        totalPages={totalPages}
+        limit={limit}
+        setLimit={setLimit}
+        wfmShifts={wfmShifts}
+        isPopoverOpen={isPopoverOpen}
+        setIsPopoverOpen={setIsPopoverOpen}
+        selectedShiftName={selectedShiftName}
+        selectedShift={selectedShift}
+        setSelectedShiftName={setSelectedShiftName}
+        handleSubmit={handleSubmit}
+        openPopover={openPopover}
+        selectedCell={selectedCell}
+      />
+    </div>
   );
 };
 
