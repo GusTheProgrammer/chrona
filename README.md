@@ -10,6 +10,7 @@ SMTP_SERVER=smtp.host.com
 SMTP_PORT=465
 SMTP_USER=user@host.com
 SMTP_KEY=password
+JWT_SECRET=''
 ```
 
 Make sure to replace `user`, `password`, and `db_name` with your own Postgres credentials, and `smtp.host.com`, `user@host.com`, and `password` with your own SMTP credentials.
@@ -85,20 +86,20 @@ BEGIN
         IF EXTRACT(DOW FROM date_counter) IN (6, 0) THEN
             -- For Saturday (6) and Sunday (0), use alternate data
             INSERT INTO shifts (id, name, color, code, "startTime", "endTime", "createdAt", "updatedAt")
-            VALUES 
-                (new_shift_id, '', '#FFFFFF', 0, date_counter, date_counter + INTERVAL '8 hours', NOW(), NOW())
+            VALUES
+                (new_shift_id, '', '', 0, date_counter, date_counter + INTERVAL '8 hours', NOW(), NOW())
             ON CONFLICT (id) DO NOTHING;
         ELSE
             -- For other days, use default shift values
             INSERT INTO shifts (id, name, color, code, "startTime", "endTime", "createdAt", "updatedAt")
-            VALUES 
-                (new_shift_id, 'Working', '#227C9D', 1, date_counter, date_counter + INTERVAL '8 hours', NOW(), NOW())
+            VALUES
+                (new_shift_id, 'Working from Office', 'bg-blue-400 dark:bg-transparent dark:bg-gradient-to-r dark:from-cyan-500 dark:to-blue-500', 1, date_counter, date_counter + INTERVAL '8 hours', NOW(), NOW())
             ON CONFLICT (id) DO NOTHING;
         END IF;
 
         -- Insert a scheduler entry with the new shift
         INSERT INTO "schedulers" ("userId", "teamId", "shiftId", "date", "createdAt", "updatedAt")
-        VALUES 
+        VALUES
             (NEW."id"::TEXT, 'a75POUlJzMDmaJtz0JCxa', new_shift_id, date_counter, NOW(), NOW());
 
         -- Increment the date
@@ -116,9 +117,7 @@ AFTER INSERT ON "users"
 FOR EACH ROW
 EXECUTE FUNCTION generate_user_scheduler();
 
-	 
-	
-	
+-- View
 CREATE OR REPLACE VIEW "SchedulerCalendar" AS
 SELECT
     s."id" AS scheduler_id,
@@ -145,9 +144,7 @@ LEFT JOIN
 
 
 
-
+-- Default Team
 INSERT INTO teams (id, name, description, "createdAt", "updatedAt")
 VALUES ('a75POUlJzMDmaJtz0JCxa', 'Team Banana', 'This is a default team.', NOW(), NOW());
-
- 
 ```
