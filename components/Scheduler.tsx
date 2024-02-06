@@ -172,6 +172,7 @@ export function Scheduler<TData, TValue>({
                     if (cellData && typeof cellData === "object") {
                       return (
                         <TableCell
+                          className={cellData.shift_color}
                           key={cell.id}
                           onDoubleClick={(event) => {
                             if (cellData.scheduler_id) {
@@ -259,6 +260,10 @@ export function Scheduler<TData, TValue>({
         setSelectedShiftName={setSelectedShiftName}
         selectedShift={selectedShift}
         position={selectedCell}
+        shiftColor={
+          wfmShifts.find((shift) => shift.shift_name === selectedShiftName)
+            ?.color
+        }
       />
     </>
   );

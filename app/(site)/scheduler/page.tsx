@@ -17,11 +17,36 @@ const Page = () => {
   const [transformedData, setTransformedData] = useState([]); // State for the transformed data
   const teamId = "a75POUlJzMDmaJtz0JCxa";
   const wfmShifts = [
-    { shift_id: 1, shift_name: "Working from Office" },
-    { shift_id: 2, shift_name: "Working from Home" },
-    { shift_id: 3, shift_name: "Vacation" },
-    { shift_id: 4, shift_name: "Sick Leave" },
-    { shift_id: 5, shift_name: "Personal Time" },
+    {
+      shift_id: 1,
+      shift_name: "Working from Office",
+      color:
+        "bg-blue-400 dark:bg-transparent dark:bg-gradient-to-r dark:from-cyan-500 dark:to-blue-500",
+    },
+    {
+      shift_id: 2,
+      shift_name: "Working from Home",
+      color:
+        "bg-purple-400 dark:bg-transparent dark:bg-gradient-to-r dark:from-purple-500 dark:to-pink-500",
+    },
+    {
+      shift_id: 3,
+      shift_name: "Vacation",
+      color:
+        "bg-red-400 dark:bg-transparent dark:bg-gradient-to-r dark:from-red-500 dark:to-orange-500",
+    },
+    {
+      shift_id: 4,
+      shift_name: "Sick Leave",
+      color:
+        "bg-yellow-400 dark:bg-transparent dark:bg-gradient-to-r dark:from-yellow-500 dark:to-lime-500",
+    },
+    {
+      shift_id: 5,
+      shift_name: "Personal Time",
+      color:
+        "bg-green-400 dark:bg-transparent dark:bg-gradient-to-r dark:from-green-500 dark:to-teal-500",
+    },
   ];
 
   const [selectedShift, setSelectedShift] = useState(null);
@@ -59,10 +84,13 @@ const Page = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    const shift = wfmShifts.find((s) => s.shift_name === selectedShiftName);
+    const shiftColor = shift ? shift.color : null;
     const updatedShiftData = {
       shift_name: selectedShiftName,
       start_time: e.target.start_time.value,
       end_time: e.target.end_time.value,
+      shift_color: shiftColor,
     };
     handleUpdateShift(updatedShiftData);
     setIsPopoverOpen(false);
