@@ -22,7 +22,7 @@ Creating a blank migration for Custom function to the PostgreSQL instance using:
 npx prisma migrate dev --create-only
 ```
 
-You can name this migration 'nanoid'. Open the file created by the migration and paste the nanoid function
+You can name this migration 'nanoid'. Open the file created by the migration and paste the nanoid function (AT THE TOP OF THE MIGRATION FILE)
 
 ```bash
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
@@ -53,18 +53,6 @@ Then you can run this migration using:
 ```bash
 npx prisma migrate dev
 ```
-
-### Starting the development server
-
-To start the development server, run:
-
-```bash
-npm run dev
-```
-
-### Seeding data
-
-To seed data, make a GET request to `http://localhost:3000/api/seeds?secret=ts&option=reset` in your browser or with a tool like Postman. This will create default user roles and permissions and create a default admin user with the email `gus@chrona.me` and password `123456`.
 
 ### Add Trigger Function and View for the Schema
 
@@ -110,16 +98,11 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-
-
 -- Trigger to call the function after a new user is inserted
 CREATE TRIGGER after_user_insert
 AFTER INSERT ON "users"
 FOR EACH ROW
 EXECUTE FUNCTION generate_user_scheduler();
-
-
-
 
 CREATE OR REPLACE VIEW "SchedulerCalendar" AS
 SELECT
@@ -145,11 +128,16 @@ LEFT JOIN
 LEFT JOIN
     "shifts" sh ON s."shiftId" = sh."id";
 
-
-
-
-INSERT INTO teams (id, name, description, "createdAt", "updatedAt")
-VALUES ('a75POUlJzMDmaJtz0JCxa', 'Team Banana', 'This is a default team.', NOW(), NOW());
-
-
 ```
+
+### Starting the development server
+
+To start the development server, run:
+
+```bash
+npm run dev
+```
+
+### Seeding data
+
+To seed data, make a GET request to `http://localhost:3000/api/seeds?secret=ts&option=reset` in your browser or with a tool like Postman. This will create default user roles and permissions and create a default admin user with the email `gus@chrona.me` and password `123456`.
