@@ -1,78 +1,79 @@
-import axios from 'axios'
+import axios from "axios";
 import {
   QueryClient,
   useMutation,
   useQuery,
   // useInfiniteQuery,
-} from '@tanstack/react-query'
+} from "@tanstack/react-query";
 
-export let baseUrl = 'http://localhost:3000/api'
+export let baseUrl = "http://localhost:3000/api";
 
-if (process.env.NODE_ENV === 'production') {
-  baseUrl = process.env.NEXT_PUBLIC_API_URL as string
+if (process.env.NODE_ENV === "production") {
+  baseUrl = process.env.NEXT_PUBLIC_API_URL as string;
 }
 
 export const userInfo = () => {
   return {
     userInfo:
-      typeof window !== 'undefined' && localStorage.getItem('userInfo')
+      typeof window !== "undefined" && localStorage.getItem("userInfo")
         ? JSON.parse(
-            typeof window !== 'undefined' &&
-              (localStorage.getItem('userInfo') as string | any)
+            typeof window !== "undefined" &&
+              (localStorage.getItem("userInfo") as string | any)
           )
         : null,
-  }
-}
+  };
+};
 
 export const config = () => {
   return {
     headers: {
       Authorization: `Bearer ${userInfo().userInfo?.state?.userInfo?.token}`,
     },
-  }
-}
+  };
+};
 
 export const api = async (method: string, url: string, obj = {}) => {
+  console.log(`API called with method: ${method}, URL: ${baseUrl}/${url}`);
   try {
     switch (method) {
-      case 'GET':
+      case "GET":
         return await axios
           .get(`${baseUrl}/${url}`, config())
-          .then((res) => res.data)
+          .then((res) => res.data);
 
-      case 'POST':
+      case "POST":
         return await axios
           .post(`${baseUrl}/${url}`, obj, config())
-          .then((res) => res.data)
+          .then((res) => res.data);
 
-      case 'PUT':
+      case "PUT":
         return await axios
           .put(`${baseUrl}/${url}`, obj, config())
-          .then((res) => res.data)
+          .then((res) => res.data);
 
-      case 'DELETE':
+      case "DELETE":
         return await axios
           .delete(`${baseUrl}/${url}`, config())
-          .then((res) => res.data)
+          .then((res) => res.data);
     }
   } catch (error: any) {
-    const err = error?.response?.data?.error || 'Something went wrong'
-    const expectedErrors = ['invalid signature', 'jwt expired']
+    const err = error?.response?.data?.error || "Something went wrong";
+    const expectedErrors = ["invalid signature", "jwt expired"];
     if (expectedErrors.includes(err)) {
-      localStorage.removeItem('userInfo')
-      window.location.reload()
+      localStorage.removeItem("userInfo");
+      window.location.reload();
     }
-    throw err
+    throw err;
   }
-}
+};
 
-type Method = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'InfiniteScroll'
+type Method = "GET" | "POST" | "PUT" | "DELETE" | "InfiniteScroll";
 
 interface ApiHookParams {
-  key: string[]
-  method: Method
-  url: string
-  scrollMethod?: 'GET'
+  key: string[];
+  method: Method;
+  url: string;
+  scrollMethod?: "GET";
 }
 
 export default function useApi({
@@ -81,47 +82,47 @@ export default function useApi({
   scrollMethod,
   url,
 }: ApiHookParams) {
-  const queryClient = new QueryClient()
+  const queryClient = new QueryClient();
   switch (method) {
-    case 'GET':
+    case "GET":
       // eslint-disable-next-line
       const get = useQuery({
         queryKey: key,
         queryFn: () => api(method, url, {}),
         retry: 0,
-      })
+      });
 
-      return { get }
+      return { get };
 
-    case 'POST':
+    case "POST":
       // eslint-disable-next-line
       const post = useMutation({
         mutationFn: (obj: any) => api(method, url, obj),
         retry: 0,
         onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: key })
+          queryClient.invalidateQueries({ queryKey: key });
         },
-      })
-      return { post }
+      });
+      return { post };
 
-    case 'PUT':
+    case "PUT":
       // eslint-disable-next-line
       const put = useMutation({
         mutationFn: (obj: any) => api(method, `${url}/${obj?.id}`, obj),
         retry: 0,
         onSuccess: () => queryClient.invalidateQueries({ queryKey: key }),
-      })
+      });
 
-      return { put }
+      return { put };
 
-    case 'DELETE':
+    case "DELETE":
       // eslint-disable-next-line
       const deleteObj = useMutation({
         mutationFn: (id: string) => api(method, `${url}/${id}`),
         retry: 0,
         onSuccess: () => queryClient.invalidateQueries({ queryKey: key }),
-      })
-      return { deleteObj }
+      });
+      return { deleteObj };
 
     // case 'InfiniteScroll':
     //   // eslint-disable-next-line
@@ -141,6 +142,6 @@ export default function useApi({
     //   return { infinite, data: infinite.data }
 
     default:
-      throw new Error(`Invalid method ${method}`)
+      throw new Error(`Invalid method ${method}`);
   }
 }

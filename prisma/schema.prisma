@@ -29,7 +29,7 @@ model User {
   Team      Team?       @relation(fields: [teamId], references: [id])
   teamId    String?     @db.VarChar(21)
   Scheduler Scheduler[]
-  Holiday   Holiday[]
+  TimeOff   TimeOff[]
 
   @@map("users")
 }
@@ -125,19 +125,20 @@ model Shift {
   @@map("shifts")
 }
 
-model Holiday {
-  id        String   @id @default(dbgenerated("nanoid()")) @db.VarChar(21)
+model TimeOff {
+  id        String        @id @default(dbgenerated("nanoid()")) @db.VarChar(21)
   userId    String
   startDate DateTime
   endDate   DateTime
   reason    String?
+  status    TimeOffStatus @default(pending)
 
   user User @relation(fields: [userId], references: [id])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@map("holidays")
+  @@map("time_off")
 }
 
 view SchedulerCalendar {
@@ -163,4 +164,10 @@ enum Method {
   POST
   PUT
   DELETE
+}
+
+enum TimeOffStatus {
+  pending
+  approved
+  declined
 }

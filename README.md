@@ -67,6 +67,7 @@ npm run dev
 To seed data, make a GET request to `http://localhost:3000/api/seeds?secret=ts&option=reset` in your browser or with a tool like Postman. This will create default user roles and permissions and create a default admin user with the email `gus@chrona.me` and password `123456`.
 
 ### Add Trigger Function and View for the Schema
+
 ```sql
 CREATE OR REPLACE FUNCTION generate_user_scheduler()
 RETURNS TRIGGER AS $$
@@ -74,34 +75,34 @@ DECLARE
     new_shift_id TEXT;
     date_counter DATE;
 BEGIN
-    -- Reset the date counter
-    date_counter := NOW();
+    -- Set the date counter to start from January 1, 2024
+    date_counter := '2024-01-01';
 
-    -- Loop through each day of the year to create unique shifts and assign to schedulers
-    FOR i IN 1..365 LOOP
+    -- Loop through each day for two years to create unique shifts and assign to schedulers
+    FOR i IN 1..730 LOOP -- 365 days * 2 years
         -- Generate a unique shift ID using the 'nanoid' function
         new_shift_id := nanoid();
 
         IF EXTRACT(DOW FROM date_counter) IN (6, 0) THEN
             -- For Saturday (6) and Sunday (0), use alternate data
             INSERT INTO shifts (id, name, color, code, "startTime", "endTime", "createdAt", "updatedAt")
-            VALUES 
-                (new_shift_id, '', '#FFFFFF', 0, date_counter, date_counter + INTERVAL '8 hours', NOW(), NOW())
+            VALUES
+                (new_shift_id, '', '', 0, date_counter, date_counter + INTERVAL '8 hours', NOW(), NOW())
             ON CONFLICT (id) DO NOTHING;
         ELSE
             -- For other days, use default shift values
             INSERT INTO shifts (id, name, color, code, "startTime", "endTime", "createdAt", "updatedAt")
-            VALUES 
-                (new_shift_id, 'Working', '#227C9D', 1, date_counter, date_counter + INTERVAL '8 hours', NOW(), NOW())
+            VALUES
+                (new_shift_id, 'Working from Home', 'bg-purple-400 dark:bg-transparent dark:bg-gradient-to-r dark:from-purple-500 dark:to-pink-500', 1, date_counter, date_counter + INTERVAL '8 hours', NOW(), NOW())
             ON CONFLICT (id) DO NOTHING;
         END IF;
 
         -- Insert a scheduler entry with the new shift
         INSERT INTO "schedulers" ("userId", "teamId", "shiftId", "date", "createdAt", "updatedAt")
-        VALUES 
-            (NEW."id"::TEXT, 'a75POUlJzMDmaJtz0JCxa', new_shift_id, date_counter, NOW(), NOW());
+        VALUES
+            (NEW."id"::TEXT, 'boU23DgXdQvlDaLi5ZVAK', new_shift_id, date_counter, NOW(), NOW());
 
-        -- Increment the date
+        -- Increment the date by one day
         date_counter := date_counter + INTERVAL '1 day';
     END LOOP;
 
@@ -110,15 +111,16 @@ END;
 $$ LANGUAGE plpgsql;
 
 
+
 -- Trigger to call the function after a new user is inserted
 CREATE TRIGGER after_user_insert
 AFTER INSERT ON "users"
 FOR EACH ROW
 EXECUTE FUNCTION generate_user_scheduler();
 
-	 
-	
-	
+
+
+
 CREATE OR REPLACE VIEW "SchedulerCalendar" AS
 SELECT
     s."id" AS scheduler_id,
@@ -149,5 +151,5 @@ LEFT JOIN
 INSERT INTO teams (id, name, description, "createdAt", "updatedAt")
 VALUES ('a75POUlJzMDmaJtz0JCxa', 'Team Banana', 'This is a default team.', NOW(), NOW());
 
- 
+
 ```

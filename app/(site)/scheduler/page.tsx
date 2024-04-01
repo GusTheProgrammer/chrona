@@ -1,12 +1,13 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { use, useEffect, useState } from "react";
 import useApi from "@/hooks/useApi";
 import { Scheduler } from "@/components/Scheduler";
 import dynamic from "next/dynamic";
 import { useQueryClient } from "@tanstack/react-query";
 
 import { generateColumns } from "./columns";
+import TimeoffForm from "@/components/TimeoffForm";
 
 const Page = () => {
   const [page, setPage] = useState(1);
@@ -15,7 +16,7 @@ const Page = () => {
   const [q, setQ] = useState("");
   const [dynamicColumns, setDynamicColumns] = useState([]); // State to hold the dynamic columns
   const [transformedData, setTransformedData] = useState([]); // State for the transformed data
-  const teamId = "a75POUlJzMDmaJtz0JCxa";
+  const teamId = "boU23DgXdQvlDaLi5ZVAK";
   const wfmShifts = [
     {
       shift_id: 1,
@@ -48,7 +49,11 @@ const Page = () => {
         "bg-green-400 dark:bg-transparent dark:bg-gradient-to-r dark:from-green-500 dark:to-teal-500",
     },
   ];
-
+  const filteredWfmShifts = wfmShifts.filter(
+    (shift) =>
+      shift.shift_name !== "Working from Home" &&
+      shift.shift_name !== "Working from Office"
+  );
   const [selectedShift, setSelectedShift] = useState(null);
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const [selectedShiftName, setSelectedShiftName] = useState(
@@ -64,15 +69,41 @@ const Page = () => {
     url: `scheduler?teamId=${teamId}&page=${page}&limit=${limit}&q=${q}`,
   })?.get;
 
-  const putApi = useApi({
+  const editSchedulerApi = useApi({
     key: ["scheduler"],
     method: "PUT",
     url: "scheduler",
   })?.put;
 
+  const timeoffApi = useApi({
+    key: ["time-off"],
+    method: "PUT",
+    url: "time-off",
+  }).put;
+
+  const handleTimeOffFormSubmit = async (formData) => {
+    try {
+      const userId = localStorage.getItem("userInfo")
+        ? JSON.parse(localStorage.getItem("userInfo")).state.userInfo.id
+        : null;
+      if (!userId) {
+        console.error("User ID is required");
+        return;
+      }
+      await timeoffApi.mutateAsync({
+        id: userId,
+        ...formData,
+      });
+      console.log("Time off scheduled successfully");
+      queryClient.invalidateQueries(["time-off"]);
+    } catch (error) {
+      console.error("Error scheduling Time off:", error);
+    }
+  };
+
   const handleUpdateShift = async (updatedShiftData) => {
     try {
-      await putApi.mutateAsync({
+      await editSchedulerApi.mutateAsync({
         id: selectedShift.scheduler_id,
         ...updatedShiftData,
       });
@@ -156,6 +187,13 @@ const Page = () => {
         openPopover={openPopover}
         selectedCell={selectedCell}
       />
+
+      <div>
+        <TimeoffForm
+          onSubmit={handleTimeOffFormSubmit}
+          wfmShifts={filteredWfmShifts}
+        />
+      </div>
     </div>
   );
 };
