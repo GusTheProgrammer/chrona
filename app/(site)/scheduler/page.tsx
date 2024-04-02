@@ -16,7 +16,8 @@ const Page = () => {
   const [q, setQ] = useState("");
   const [dynamicColumns, setDynamicColumns] = useState([]); // State to hold the dynamic columns
   const [transformedData, setTransformedData] = useState([]); // State for the transformed data
-  const teamId = "boU23DgXdQvlDaLi5ZVAK";
+  const teamId = JSON.parse(localStorage.getItem("userInfo")!).state.userInfo
+    .user.teamId;
   const wfmShifts = [
     {
       shift_id: 1,

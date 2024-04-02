@@ -26,8 +26,8 @@ model User {
 
   role      Role        @relation(fields: [roleId], references: [id], onDelete: Restrict)
   roleId    String
-  Team      Team?       @relation(fields: [teamId], references: [id])
-  teamId    String?     @db.VarChar(21)
+  Team      Team        @relation(fields: [teamId], references: [id])
+  teamId    String      @db.VarChar(21)
   Scheduler Scheduler[]
   TimeOff   TimeOff[]
 

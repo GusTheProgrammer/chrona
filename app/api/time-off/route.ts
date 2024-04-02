@@ -45,7 +45,7 @@ export async function POST(req: Request) {
 
 export async function GET(req: Request) {
   try {
-    // await isAuth(req);
+    await isAuth(req);
 
     const url = new URL(req.url);
     const userId = url.searchParams.get("userId");

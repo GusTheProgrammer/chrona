@@ -2,7 +2,7 @@ import {
   clientPermissions,
   permissions,
   roles,
-  team,
+  teams,
   users,
 } from "@/config/data";
 
@@ -67,33 +67,39 @@ export async function GET(req: Request) {
       );
     });
 
-    await prisma.team.upsert({
-      where: { id: team.id },
-      update: team,
-      create: team,
-    });
+    // Create teams
+    for (const team of teams) {
+      await prisma.team.upsert({
+        where: { id: team.id },
+        update: team,
+        create: team,
+      });
+    }
 
     // Create users or update if exists
-    await prisma.user.upsert({
-      where: { id: users.id },
-      create: {
-        ...users,
-        password: await encryptPassword({ password: users.password }),
-        roleId: roles[0].id,
-      },
-      update: {
-        ...users,
-        roleId: roles[0].id,
-        password: await encryptPassword({ password: users.password }),
-      },
-    });
+    for (const user of users) {
+      await prisma.user.upsert({
+        where: { id: user.id },
+        create: {
+          ...user,
+          password: await encryptPassword({ password: user.password }),
+          roleId: roles[0].id,
+          teamId: teams[0].id,
+        },
+        update: {
+          ...user,
+          password: await encryptPassword({ password: user.password }),
+          roleId: roles[0].id,
+        },
+      });
 
-    await prisma.user.update({
-      data: {
-        roleId: roles[0].id,
-      },
-      where: { id: users.id },
-    });
+      await prisma.user.update({
+        data: {
+          roleId: roles[0].id,
+        },
+        where: { id: user.id },
+      });
+    }
 
     // Create permissions
     await Promise.all(

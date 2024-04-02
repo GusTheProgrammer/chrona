@@ -56,16 +56,12 @@ const Page = () => {
     url: "time-off",
   }).post;
 
-  const userId = localStorage.getItem("userInfo")
-    ? JSON.parse(localStorage.getItem("userInfo")).state.userInfo.id
-    : null;
+  const userId = JSON.parse(localStorage.getItem("userInfo")!).state.userInfo
+    .id;
 
   const handleTimeOffFormSubmit = async (formData: any) => {
     console.log("formData", formData);
     try {
-      const userId = localStorage.getItem("userInfo")
-        ? JSON.parse(localStorage.getItem("userInfo")).state.userInfo.id
-        : null;
       if (!userId) {
         console.error("User ID is required");
         return;

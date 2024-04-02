@@ -20,26 +20,37 @@ const roles = [
   },
 ];
 
-const users = {
-  id: "e5cTUpLtGS7foE42nJuwp",
-  name: "Gus",
-  email: "gus@chrona.me",
-  password: "gus@chrona.me",
-  confirmed: true,
-  blocked: false,
-  mobile: 123456789,
-  address: "Dublin",
-  image: "https://github.com/GusTheProgrammer.png",
-  bio: "Full Stack Developer",
-};
+const users = [
+  {
+    id: "e5cTUpLtGS7foE42nJuwp",
+    name: "Gus",
+    email: "gus@chrona.me",
+    password: "gus@chrona.me",
+    confirmed: true,
+    blocked: false,
+    mobile: 123456789,
+    address: "Dublin",
+    image: "https://github.com/GusTheProgrammer.png",
+    bio: "Full Stack Developer",
+  },
+];
 
-const team = {
-  id: "boU23DgXdQvlDaLi5ZVAK",
-  name: "Team Banana",
-  description: "The first team to be registered with Chrona",
-  createdAt: new Date(),
-  updatedAt: new Date(),
-};
+const teams = [
+  {
+    id: "boU23DgXdQvlDaLi5ZVAK",
+    name: "Team Banana",
+    description: "Frontend team",
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  },
+  {
+    id: "M5ACSCbM47QeWAaby2ZKK",
+    name: "Team Alpha",
+    description: "Backend team",
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  },
+];
 
 const profile = {
   id: "hMXCyzI2MLXNI6tQ-sU0i",
@@ -321,4 +332,4 @@ const permissions = [
   },
 ];
 
-export { roles, users, team, profile, permissions, clientPermissions };
+export { roles, users, teams, profile, permissions, clientPermissions };

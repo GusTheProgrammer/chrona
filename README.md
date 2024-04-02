@@ -75,20 +75,20 @@ BEGIN
             -- For Saturday (6) and Sunday (0), use alternate data
             INSERT INTO shifts (id, name, color, code, "startTime", "endTime", "createdAt", "updatedAt")
             VALUES
-                (new_shift_id, '', '', 0, date_counter, date_counter + INTERVAL '8 hours', NOW(), NOW())
+                (new_shift_id, '', '', 0, date_counter + INTERVAL '9 hour', date_counter + INTERVAL '17 hour', NOW(), NOW())
             ON CONFLICT (id) DO NOTHING;
         ELSE
             -- For other days, use default shift values
             INSERT INTO shifts (id, name, color, code, "startTime", "endTime", "createdAt", "updatedAt")
             VALUES
-                (new_shift_id, 'Working from Home', 'bg-purple-400 dark:bg-transparent dark:bg-gradient-to-r dark:from-purple-500 dark:to-pink-500', 1, date_counter, date_counter + INTERVAL '8 hours', NOW(), NOW())
+                (new_shift_id, 'Working from Office', 'bg-blue-400 dark:bg-transparent dark:bg-gradient-to-r dark:from-cyan-500 dark:to-blue-500', 1, date_counter + INTERVAL '8 hour', date_counter + INTERVAL '16 hour', NOW(), NOW())
             ON CONFLICT (id) DO NOTHING;
         END IF;
 
-        -- Insert a scheduler entry with the new shift
+        -- Insert a scheduler entry with the new shift, using the teamId from the newly inserted user
         INSERT INTO "schedulers" ("userId", "teamId", "shiftId", "date", "createdAt", "updatedAt")
         VALUES
-            (NEW."id"::TEXT, 'boU23DgXdQvlDaLi5ZVAK', new_shift_id, date_counter, NOW(), NOW());
+            (NEW."id", NEW."teamId", new_shift_id, date_counter, NOW(), NOW());
 
         -- Increment the date by one day
         date_counter := date_counter + INTERVAL '1 day';
@@ -97,6 +97,7 @@ BEGIN
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
+
 
 -- Trigger to call the function after a new user is inserted
 CREATE TRIGGER after_user_insert
@@ -140,4 +141,4 @@ npm run dev
 
 ### Seeding data
 
-To seed data, make a GET request to `http://localhost:3000/api/seeds?secret=ts&option=reset` in your browser or with a tool like Postman. This will create default user roles and permissions and create a default admin user with the email `gus@chrona.me` and password `123456`.
+To seed data, make a GET request to `http://localhost:3000/api/seeds?secret=ts&option=reset` in your browser or with a tool like Postman. This will create default user roles and permissions and create a default admin user with the email and password are `gus@chrona.me`.
