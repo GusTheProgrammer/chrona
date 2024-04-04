@@ -3,15 +3,15 @@ import { prisma } from "@/lib/prisma.db";
 import { isAuth } from "@/lib/auth";
 import wfmShifts from "@/config/wfmShifts";
 
-export async function PUT(
+export async function POST(
   req: Request,
   { params }: { params: { id: string } }
 ) {
   try {
     // await isAuth(req);
 
-    const url = new URL(req.url);
-    const userId = url.searchParams.get("userId");
+    const userId = req.headers.get("X-User-Id");
+
     const timeOffId = params.id;
 
     if (!userId) {
@@ -41,8 +41,8 @@ export async function PUT(
         { status: 403 }
       );
     }
-
     const { isApproved } = await req.json();
+
     if (typeof isApproved !== "boolean") {
       return new NextResponse(
         JSON.stringify({
@@ -103,6 +103,136 @@ export async function PUT(
           isApproved ? "approved" : "declined"
         } successfully`,
       }),
+      { status: 200 }
+    );
+  } catch (error: any) {
+    console.error("Error:", error.message);
+    return new NextResponse(JSON.stringify({ error: error.message }), {
+      status: error.status || 500,
+    });
+  }
+}
+
+export async function PUT(
+  req: Request,
+  { params }: { params: { id: string } }
+) {
+  try {
+    // await isAuth(req);
+
+    const userId = req.headers.get("X-User-Id");
+
+    // Fetching new time-off details along with userId from the request body
+    const timeOffId = params.id;
+
+    // Verify if the userId is provided in the JSON body
+    if (!userId) {
+      return new NextResponse(
+        JSON.stringify({ error: "Invalid user ID or not found" }),
+        { status: 401 }
+      );
+    }
+
+    // Fetch the timeOff request to ensure the user is tied to this request and the request exists
+    const timeOffRequest = await prisma.timeOff.findUnique({
+      where: { id: timeOffId },
+    });
+
+    if (!timeOffRequest) {
+      return new NextResponse(
+        JSON.stringify({ error: "TimeOff request not found" }),
+        { status: 404 }
+      );
+    }
+
+    // Check if the user making the request is the same as the one tied to the time-off request
+    if (timeOffRequest.userId !== userId) {
+      return new NextResponse(
+        JSON.stringify({ error: "Unauthorized to edit this time-off request" }),
+        { status: 403 }
+      );
+    }
+
+    const { startDate, endDate, reason } = await req.json();
+
+    // Update the timeOff request details
+    await prisma.timeOff.update({
+      where: { id: timeOffId },
+      data: {
+        startDate: new Date(startDate),
+        endDate: new Date(endDate),
+        reason, // Assuming 'reason' is directly assignable
+      },
+    });
+
+    return new NextResponse(
+      JSON.stringify({ message: "TimeOff request updated successfully" }),
+      { status: 200 }
+    );
+  } catch (error: any) {
+    console.error("Error:", error.message);
+    return new NextResponse(JSON.stringify({ error: error.message }), {
+      status: error.status || 500,
+    });
+  }
+}
+
+export async function DELETE(
+  req: Request,
+  { params }: { params: { id: string } }
+) {
+  try {
+    // await isAuth(req);
+
+    const userId = req.headers.get("X-User-Id");
+
+    const timeOffId = params.id;
+
+    if (!userId) {
+      return new NextResponse(
+        JSON.stringify({ error: "User ID is required" }),
+        { status: 401 }
+      );
+    }
+
+    const timeOffRequest = await prisma.timeOff.findUnique({
+      where: { id: timeOffId },
+    });
+
+    if (!timeOffRequest) {
+      return new NextResponse(
+        JSON.stringify({ error: "TimeOff request not found" }),
+        { status: 404 }
+      );
+    }
+
+    // Check if the request is created by the user attempting to delete it
+    if (timeOffRequest.userId !== userId) {
+      return new NextResponse(
+        JSON.stringify({
+          error: "Unauthorized to delete this time-off request",
+        }),
+        { status: 403 }
+      );
+    }
+
+    // Ensure the request can only be deleted if its status is 'pending'
+    if (timeOffRequest.status !== "pending") {
+      return new NextResponse(
+        JSON.stringify({
+          error: "Only pending time-off requests can be deleted",
+        }),
+        { status: 400 }
+      );
+    }
+
+    // Delete the timeOff request
+    await prisma.timeOff.delete({
+      where: { id: timeOffId },
+    });
+
+    return new NextResponse(
+      JSON.stringify({ message: "TimeOff request deleted successfully" }),
       { status: 200 }
     );
   } catch (error: any) {

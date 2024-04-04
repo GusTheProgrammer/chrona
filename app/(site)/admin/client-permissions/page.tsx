@@ -55,25 +55,25 @@ const Page = () => {
     key: ["client-permissions"],
     method: "GET",
     url: `client-permissions?page=${page}&q=${q}&limit=${limit}`,
-  })?.get;
+  })?.GET;
 
   const postApi = useApi({
     key: ["client-permissions"],
     method: "POST",
     url: `client-permissions`,
-  })?.post;
+  })?.POST;
 
   const updateApi = useApi({
     key: ["client-permissions"],
     method: "PUT",
     url: `client-permissions`,
-  })?.put;
+  })?.PUT;
 
   const deleteApi = useApi({
     key: ["client-permissions"],
     method: "DELETE",
     url: `client-permissions`,
-  })?.deleteObj;
+  })?.DELETE;
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),

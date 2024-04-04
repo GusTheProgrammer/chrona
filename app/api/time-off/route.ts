@@ -6,14 +6,20 @@ export async function POST(req: Request) {
   try {
     await isAuth(req);
 
-    const { userId, startDate, endDate, shiftType } = await req.json();
+    const userId = req.headers.get("X-User-Id");
+    if (!userId) {
+      return new NextResponse(
+        JSON.stringify({ error: "User ID is required" }),
+        { status: 400 }
+      );
+    }
+    const { startDate, endDate, shiftType } = await req.json();
 
     // Validate input data (startDate, endDate, shiftType, and reason are required)
-    if (!userId || !startDate || !endDate || !shiftType) {
+    if (!startDate || !endDate || !shiftType) {
       return new NextResponse(
         JSON.stringify({
-          error:
-            "userId, startDate, endDate, shiftType, and reason are required",
+          error: "startDate, endDate, shiftType, and reason are required",
         }),
         { status: 400 }
       );
@@ -46,9 +52,7 @@ export async function POST(req: Request) {
 export async function GET(req: Request) {
   try {
     await isAuth(req);
-
-    const url = new URL(req.url);
-    const userId = url.searchParams.get("userId");
+    const userId = req.headers.get("X-User-Id");
 
     if (!userId) {
       return new NextResponse(
@@ -57,12 +61,41 @@ export async function GET(req: Request) {
       );
     }
 
-    const timeOffRequests = await prisma.timeOff.findMany({
-      where: { userId: userId },
-      include: {
-        user: { include: { Team: true } },
-      },
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      include: { role: true },
     });
+
+    if (!user) {
+      return new NextResponse(JSON.stringify({ error: "User not found" }), {
+        status: 404,
+      });
+    }
+
+    let timeOffRequests;
+    if (user.role.name === "Manager" || user.role.name === "Super Admin") {
+      // Fetch time-off requests for everyone on the team
+      timeOffRequests = await prisma.timeOff.findMany({
+        where: {
+          user: {
+            teamId: user.teamId,
+          },
+        },
+        include: {
+          user: {
+            include: { Team: true },
+          },
+        },
+      });
+    } else {
+      // Fetch time-off requests only for the requesting user
+      timeOffRequests = await prisma.timeOff.findMany({
+        where: { userId: userId },
+        include: {
+          user: { include: { Team: true } },
+        },
+      });
+    }
 
     const formattedRequests = timeOffRequests.map((request) => ({
       id: request.id,

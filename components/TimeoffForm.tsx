@@ -23,10 +23,14 @@ import {
 import { useForm } from "react-hook-form";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { useEffect } from "react";
 
 export default function TimeoffForm({
   onSubmit: onHolidaySubmit,
   wfmShifts,
+  initialValues,
+  isDialogOpen,
+  setIsDialogOpen,
 }: {
   onSubmit: (formData: {
     startDate: string;
@@ -34,31 +38,79 @@ export default function TimeoffForm({
     shiftType: string;
   }) => void;
   wfmShifts: Array<{ shift_id: number; shift_name: string; color: string }>;
+  initialValues?: {
+    startDate: Date;
+    endDate: Date;
+    shiftType: string;
+    id: string;
+  };
+  isDialogOpen: boolean;
+  setIsDialogOpen: (isOpen: boolean) => void;
 }) {
+  const defaultDateRange = { from: new Date(), to: addDays(new Date(), 20) };
   const [date, setDate] = React.useState<DateRange | undefined>({
-    from: new Date(),
-    to: addDays(new Date(), 20),
+    from: initialValues?.startDate
+      ? new Date(initialValues.startDate)
+      : defaultDateRange.from,
+    to: initialValues?.endDate
+      ? new Date(initialValues.endDate)
+      : defaultDateRange.to,
   });
 
-  const [isDialogOpen, setIsDialogOpen] = React.useState(false);
+  const formDefaultValues = {
+    shiftType:
+      initialValues?.shiftType ||
+      (wfmShifts.length > 0 ? wfmShifts[0].shift_name : ""),
+  };
 
   const {
     register,
     handleSubmit,
     setValue,
     watch,
+    reset,
     formState: { errors },
   } = useForm({
     defaultValues: {
-      shiftType: wfmShifts.length > 0 ? wfmShifts[0].shift_name : "",
+      formDefaultValues,
     },
   });
 
   const selectedShiftType = watch("shiftType");
 
-  React.useEffect(() => {
+  useEffect(() => {
     register("shiftType");
   }, [register]);
+
+  useEffect(() => {
+    if (!isDialogOpen) {
+      // Reset the form to default values
+      reset({
+        shiftType: wfmShifts.length > 0 ? wfmShifts[0].shift_name : "",
+        // Add other fields to reset as necessary
+      });
+      // Reset the selected dates to default as well
+      setDate({
+        from: new Date(),
+        to: addDays(new Date(), 20),
+      });
+    }
+
+    const startDate = initialValues?.startDate
+      ? new Date(initialValues.startDate)
+      : new Date();
+    const endDate = initialValues?.endDate
+      ? new Date(initialValues.endDate)
+      : addDays(new Date(), 20);
+
+    setDate({ from: startDate, to: endDate });
+
+    // Reset form with initialValues when they change, e.g., when a different time-off request is selected for editing
+    reset({
+      ...formDefaultValues,
+      // Potentially other fields to reset if your form includes them
+    });
+  }, [initialValues, reset, wfmShifts]);
 
   const onSubmit = async (data: { shiftType: string }) => {
     if (date && date.from && date.to) {

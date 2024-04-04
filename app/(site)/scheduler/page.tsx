@@ -33,39 +33,13 @@ const Page = () => {
     key: ["scheduler", page],
     method: "GET",
     url: `scheduler?teamId=${teamId}&page=${page}&limit=${limit}&q=${q}`,
-  })?.get;
+  })?.GET;
 
   const editSchedulerApi = useApi({
     key: ["scheduler"],
     method: "PUT",
     url: "scheduler",
-  })?.put;
-
-  const timeoffApi = useApi({
-    key: ["time-off"],
-    method: "PUT",
-    url: "time-off",
-  }).put;
-
-  const handleTimeOffFormSubmit = async (formData) => {
-    try {
-      const userId = localStorage.getItem("userInfo")
-        ? JSON.parse(localStorage.getItem("userInfo")).state.userInfo.id
-        : null;
-      if (!userId) {
-        console.error("User ID is required");
-        return;
-      }
-      await timeoffApi.mutateAsync({
-        id: userId,
-        ...formData,
-      });
-      console.log("Time off scheduled successfully");
-      queryClient.invalidateQueries(["time-off"]);
-    } catch (error) {
-      console.error("Error scheduling Time off:", error);
-    }
-  };
+  })?.PUT;
 
   const handleUpdateShift = async (updatedShiftData) => {
     try {

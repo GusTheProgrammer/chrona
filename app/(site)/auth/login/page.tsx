@@ -23,7 +23,7 @@ const Page = () => {
     key: ["login"],
     method: "POST",
     url: `auth/login`,
-  })?.post;
+  })?.POST;
 
   useEffect(() => {
     if (postApi?.isSuccess) {

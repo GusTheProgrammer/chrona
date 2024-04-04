@@ -55,13 +55,13 @@ const Page = () => {
     key: ["teams"],
     method: "GET",
     url: `teams`,
-  }).get;
+  }).GET;
 
   const postApi = useApi({
     key: ["login"],
     method: "POST",
     url: `auth/register`,
-  })?.post;
+  })?.POST;
 
   useEffect(() => {
     if (postApi?.isSuccess) {
