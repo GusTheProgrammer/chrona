@@ -8,6 +8,7 @@ import Link from "next/link";
 import Image from "next/image";
 import profile from "@/public/img/profile.png";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { Toaster } from "@/components/ui/sonner";
 
 const roboto = Roboto({
   subsets: ["latin"],
@@ -49,6 +50,7 @@ export default function RootLayout({
             </div>
             <div className="max-w-6xl mx-auto px-2">
               <main className="flex min-h-[85.5vh] flex-col">{children}</main>
+              <Toaster position="bottom-left" />
             </div>
             <Footer />
           </Providers>

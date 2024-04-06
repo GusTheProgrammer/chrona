@@ -29,7 +29,7 @@ export default function Upload({
     key: ['upload'],
     method: 'POST',
     url: `uploads?type=${fileType}`,
-  })?.post
+  })?.POST
 
   React.useEffect(() => {
     if (file?.length > 0) {

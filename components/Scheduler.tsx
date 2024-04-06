@@ -1,5 +1,4 @@
 "use client";
-import * as React from "react";
 
 import {
   ColumnDef,
@@ -43,9 +42,24 @@ import { Button } from "@/components/ui/button";
 
 import { DataTablePagination } from "@/components/DataTablePagination";
 import SchedulerEditPopover from "@/components/SchedulerEditPopover";
+import { useState } from "react";
 interface SchedulerProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
+  page: number;
+  setPage: (page: number) => void;
+  limit: number;
+  setLimit: (limit: number) => void;
+  totalPages: number;
+  wfmShifts: any;
+  isPopoverOpen: boolean;
+  setIsPopoverOpen: (isOpen: boolean) => void;
+  selectedShift: any;
+  handleSubmit: (updatedShiftData: any) => void;
+  openPopover: (shift: any, event: any) => void;
+  selectedCell: any;
+  selectedShiftName: string;
+  setSelectedShiftName: (shiftName: string) => void;
 }
 
 export function Scheduler<TData, TValue>({
@@ -66,13 +80,13 @@ export function Scheduler<TData, TValue>({
   selectedShiftName,
   setSelectedShiftName,
 }: SchedulerProps<TData, TValue>) {
-  const [sorting, setSorting] = React.useState<SortingState>([]);
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
-    []
-  );
+  console.log("wfmShifts", wfmShifts);
+  const [sorting, setSorting] = useState<SortingState>([
+    { id: "fullname", desc: false },
+  ]);
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
 
-  const [columnVisibility, setColumnVisibility] =
-    React.useState<VisibilityState>({});
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
 
   const table = useReactTable({
     data,
@@ -261,8 +275,9 @@ export function Scheduler<TData, TValue>({
         selectedShift={selectedShift}
         position={selectedCell}
         shiftColor={
-          wfmShifts.find((shift) => shift.shift_name === selectedShiftName)
-            ?.color
+          wfmShifts.find(
+            (shift: { name: any }) => shift.name === selectedShiftName
+          )?.color
         }
       />
     </>
