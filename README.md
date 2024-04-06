@@ -2,7 +2,7 @@
 
 ### Environment setup
 
-Create a `.env.local` file in the root directory of the project with the following variables:
+First, create a `.env.local` file in the root directory of the project with the following variables:
 
 ```
 DATABASE_URL=postgres://user:password@localhost:5432/db_name
@@ -14,15 +14,25 @@ SMTP_KEY=password
 
 Make sure to replace `user`, `password`, and `db_name` with your own Postgres credentials, and `smtp.host.com`, `user@host.com`, and `password` with your own SMTP credentials.
 
-# Nano ID for postgres
+## DB Setup
 
-Creating a blank migration for Custom function to the PostgreSQL instance using:
+This step involves creating a custom function in your PostgreSQL instance. This can be done manually or by using a bash script.
+
+### Automated Process
+
+You can use a bash script to automate the migration creation, function addition, and migration execution. Execute the script `./prisma_migrate.sh`.
+
+### Manual Process
+
+1. Create a blank migration:
 
 ```bash
 npx prisma migrate dev --create-only
 ```
 
-You can name this migration 'nanoid'. Open the file created by the migration and paste the nanoid function (AT THE TOP OF THE MIGRATION FILE)
+You can name this migration 'nanoid'. Then, open the file created by the migration.
+
+2. Paste the Nano ID function at the top of the migration file:
 
 ```bash
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
@@ -48,13 +58,7 @@ END
 $$ LANGUAGE PLPGSQL STABLE;
 ```
 
-Then you can run this migration using:
-
-```bash
-npx prisma migrate dev
-```
-
-### Add Trigger Function and View for the Schema
+3. Add the Trigger Function and View at the bottom of the same migration file as described in the provided SQL statements.
 
 ```sql
 CREATE OR REPLACE FUNCTION generate_user_scheduler()
@@ -127,6 +131,12 @@ LEFT JOIN
     "teams" t ON s."teamId" = t."id"
 LEFT JOIN
     "shifts" sh ON s."shiftId" = sh."id";
+```
+
+4. Run the migration:
+
+```bash
+npx prisma migrate dev
 ```
 
 ### Starting the development server
