@@ -8,19 +8,12 @@ import useApi from "@/hooks/useApi";
 import { useQueryClient } from "@tanstack/react-query";
 import { DataTable } from "./data-table";
 import { getColumns } from "./columns";
-import wfmShifts from "@/config/wfmShifts";
 import { useState } from "react";
 import Message from "@/components/Message";
 
 const Page = () => {
   const [selectedTimeOffRequest, setSelectedTimeOffRequest] = useState(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-
-  const filteredWfmShifts = wfmShifts.filter(
-    (shift) =>
-      shift.shift_name !== "Working from Home" &&
-      shift.shift_name !== "Working from Office"
-  );
 
   const queryClient = useQueryClient();
 
@@ -58,8 +51,19 @@ const Page = () => {
     url: "time-off",
   }).POST;
 
+  const getWfmShifts = useApi({
+    key: ["wfm-shifts"],
+    method: "GET",
+    url: "wfm-shifts",
+  }).GET;
+
+  const wfmShifts = getWfmShifts?.data || [];
+
+  const filteredWfmShifts = wfmShifts.filter(
+    (shift: { name: string }) =>
+      shift.name !== "Working from Home" && shift.name !== "Working from Office"
+  );
   const handleTimeOffFormSubmit = async (formData: any) => {
-    console.log("Form data submitted:", formData);
     try {
       // Check if we are editing an existing time off request
       if (selectedTimeOffRequest) {
@@ -68,13 +72,11 @@ const Page = () => {
           id: selectedTimeOffRequest.id,
           ...formData,
         });
-        console.log("Time off request edited successfully");
       } else {
         // Create a new time off request as before
         await createTimeoffApi?.mutateAsync({
           ...formData,
         });
-        console.log("Time off scheduled successfully");
       }
       queryClient.invalidateQueries(["time-off"]);
       setSelectedTimeOffRequest(null); // Reset the selected request for editing
@@ -95,7 +97,6 @@ const Page = () => {
         ...payload,
         url: actionUrl,
       });
-      console.log("Time off request edited successfully");
       queryClient.invalidateQueries(["time-off"]); // Adjust the query key as needed
     } catch (error) {
       console.error("Error editing time off request:", error);
@@ -108,7 +109,6 @@ const Page = () => {
     dateTo: string | number | Date;
     reason: any;
   }) => {
-    console.log("Edit action called with ID:", timeOffRequest);
     const initialValues = {
       id: timeOffRequest.id,
       startDate: new Date(timeOffRequest.dateFrom), // Convert to Date object
@@ -120,11 +120,9 @@ const Page = () => {
   };
 
   const handleDeleteAction = async (id: string) => {
-    console.log("Delete action called with ID:", id);
     try {
       // Assuming your API expects the ID as part of the URL path
       await deleteTimeoffApi?.mutateAsync(id);
-      console.log("Time off request deleted successfully");
 
       // Invalidate queries as needed
       queryClient.invalidateQueries(["time-off"]);

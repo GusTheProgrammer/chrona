@@ -73,15 +73,15 @@ BEGIN
 
         IF EXTRACT(DOW FROM date_counter) IN (6, 0) THEN
             -- For Saturday (6) and Sunday (0), use alternate data
-            INSERT INTO shifts (id, name, color, code, "startTime", "endTime", "createdAt", "updatedAt")
+            INSERT INTO shifts (id, name, color, "startTime", "endTime", "createdAt", "updatedAt")
             VALUES
-                (new_shift_id, '', '', 0, date_counter + INTERVAL '9 hour', date_counter + INTERVAL '17 hour', NOW(), NOW())
+                (new_shift_id, '', '', date_counter + INTERVAL '9 hour', date_counter + INTERVAL '17 hour', NOW(), NOW())
             ON CONFLICT (id) DO NOTHING;
         ELSE
             -- For other days, use default shift values
-            INSERT INTO shifts (id, name, color, code, "startTime", "endTime", "createdAt", "updatedAt")
+            INSERT INTO shifts (id, name, color, "startTime", "endTime", "createdAt", "updatedAt")
             VALUES
-                (new_shift_id, 'Working from Office', 'bg-blue-400 dark:bg-transparent dark:bg-gradient-to-r dark:from-cyan-500 dark:to-blue-500', 1, date_counter + INTERVAL '8 hour', date_counter + INTERVAL '16 hour', NOW(), NOW())
+                (new_shift_id, 'Working from Office', 'bg-blue-400 dark:bg-transparent dark:bg-gradient-to-r dark:from-cyan-500 dark:to-blue-500', date_counter + INTERVAL '8 hour', date_counter + INTERVAL '16 hour', NOW(), NOW())
             ON CONFLICT (id) DO NOTHING;
         END IF;
 
@@ -117,7 +117,6 @@ SELECT
     sh."id" AS shift_id,
     sh."name" AS shift_name,
     sh."color" AS shift_color,
-    sh."code" AS shift_code,
     sh."startTime" AS start_time,
     sh."endTime" AS end_time
 FROM
@@ -128,7 +127,6 @@ LEFT JOIN
     "teams" t ON s."teamId" = t."id"
 LEFT JOIN
     "shifts" sh ON s."shiftId" = sh."id";
-
 ```
 
 ### Starting the development server

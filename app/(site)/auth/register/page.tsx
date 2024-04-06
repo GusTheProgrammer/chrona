@@ -101,7 +101,6 @@ const Page = () => {
   });
 
   function onSubmit(values: z.infer<typeof FormSchema>) {
-    console.log(values);
     postApi?.mutateAsync(values);
   }
 

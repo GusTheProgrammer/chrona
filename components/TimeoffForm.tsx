@@ -37,7 +37,7 @@ export default function TimeoffForm({
     endDate: string;
     shiftType: string;
   }) => void;
-  wfmShifts: Array<{ shift_id: number; shift_name: string; color: string }>;
+  wfmShifts: Array<{ id: number; name: string; color: string }>;
   initialValues?: {
     startDate: Date;
     endDate: Date;
@@ -60,7 +60,7 @@ export default function TimeoffForm({
   const formDefaultValues = {
     shiftType:
       initialValues?.shiftType ||
-      (wfmShifts.length > 0 ? wfmShifts[0].shift_name : ""),
+      (wfmShifts.length > 0 ? wfmShifts[0].name : ""),
   };
 
   const {
@@ -86,8 +86,7 @@ export default function TimeoffForm({
     if (!isDialogOpen) {
       // Reset the form to default values
       reset({
-        shiftType: wfmShifts.length > 0 ? wfmShifts[0].shift_name : "",
-        // Add other fields to reset as necessary
+        shiftType: wfmShifts.length > 0 ? wfmShifts[0].name : "",
       });
       // Reset the selected dates to default as well
       setDate({
@@ -115,7 +114,7 @@ export default function TimeoffForm({
   const onSubmit = async (data: { shiftType: string }) => {
     if (date && date.from && date.to) {
       const shiftColor = wfmShifts.find(
-        (shift) => shift.shift_name === data.shiftType
+        (shift) => shift.name === data.shiftType
       )?.color;
 
       const formData = {
@@ -151,14 +150,12 @@ export default function TimeoffForm({
             className="flex flex-col"
           >
             {wfmShifts.map((shift) => (
-              <div key={shift.shift_id} className="flex items-center space-x-2">
+              <div key={shift.id} className="flex items-center space-x-2">
                 <RadioGroupItem
-                  value={shift.shift_name}
-                  id={`shiftType-${shift.shift_id}`}
+                  value={shift.name}
+                  id={`shiftType-${shift.id}`}
                 />
-                <Label htmlFor={`shiftType-${shift.shift_id}`}>
-                  {shift.shift_name}
-                </Label>
+                <Label htmlFor={`shiftType-${shift.id}`}>{shift.name}</Label>
               </div>
             ))}
           </RadioGroup>

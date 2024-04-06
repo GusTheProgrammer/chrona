@@ -1,5 +1,4 @@
 "use client";
-import * as React from "react";
 
 import {
   Command,
@@ -10,27 +9,7 @@ import {
   CommandList,
 } from "@/components/ui/command";
 
-import { formatISO, set } from "date-fns";
-
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuLabel,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
-  DropdownMenuSeparator,
-  DropdownMenuCheckboxItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { formatISO } from "date-fns";
 
 import { Separator } from "@/components/ui/separator";
 
@@ -40,10 +19,9 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 import { TimePicker } from "@/components/TimePicker";
+import { useEffect, useState } from "react";
 
 const combineDateAndTime = (date, time) => {
   if (!date || !time) return null;
@@ -62,17 +40,17 @@ const SchedulerEditPopover = ({
   selectedShift,
   position,
 }) => {
-  const [open, setOpen] = React.useState(false);
-  const [startTime, setStartTime] = React.useState<Date | null>(null);
-  const [endTime, setEndTime] = React.useState<Date | null>(null);
+  const [open, setOpen] = useState(false);
+  const [startTime, setStartTime] = useState<Date | null>(null);
+  const [endTime, setEndTime] = useState<Date | null>(null);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (selectedShift) {
       const start = new Date(selectedShift.start_time);
       const end = new Date(selectedShift.end_time);
       setStartTime(start);
       setEndTime(end);
-      setSelectedShiftName(selectedShift.shift_name);
+      setSelectedShiftName(selectedShift.name);
     }
   }, [selectedShift]);
 
@@ -126,13 +104,13 @@ const SchedulerEditPopover = ({
                     <CommandGroup>
                       {wfmShifts.map((shift) => (
                         <CommandItem
-                          key={shift.shift_id}
+                          key={shift.id}
                           onSelect={() => {
-                            setSelectedShiftName(shift.shift_name);
+                            setSelectedShiftName(shift.name);
                             setOpen(false);
                           }}
                         >
-                          {shift.shift_name}
+                          {shift.name}
                         </CommandItem>
                       ))}
                     </CommandGroup>

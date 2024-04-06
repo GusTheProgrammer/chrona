@@ -36,16 +36,27 @@ export const generateColumns = (apiData: any): ColumnDef<Scheduler>[] => {
 
   // Generate a column for each date
   dates.forEach((date) => {
-  // Format the date to DD-MM-YYYY format
-  const formattedDate = new Date(date).toLocaleDateString("en-GB");
+    // Format the day name and the date separately
+    const dayName = new Date(date).toLocaleDateString("en-GB", {
+      weekday: "long",
+    });
+    const formattedDate = new Date(date).toLocaleDateString("en-GB", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    });
 
-  dynamicColumns.push({
-    accessorKey: date, // accessorKey should match the keys in your data
-    header: formattedDate,
-    // You can add more properties to customize the cell rendering
-    cell: (info) => info.getValue(), // For example, just return the value here
+    dynamicColumns.push({
+      accessorKey: date, // accessorKey should match the keys in your data
+      header: ({ column }) => (
+        <div className="text-center">
+          <p className="text-sm font-semibold">{dayName}</p>{" "}
+          <p className="text-xs">{formattedDate}</p>
+        </div>
+      ),
+      cell: (info) => info.getValue(),
+    });
   });
-});
 
   return dynamicColumns;
 };

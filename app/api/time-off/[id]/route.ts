@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma.db";
 import { isAuth } from "@/lib/auth";
-import wfmShifts from "@/config/wfmShifts";
 
 export async function POST(
   req: Request,
@@ -31,7 +30,6 @@ export async function POST(
         status: 404,
       });
     }
-    console.log("role name", user.role.name);
 
     if (user.role.name !== "Manager" && user.role.name !== "Super Admin") {
       return new NextResponse(
@@ -72,9 +70,12 @@ export async function POST(
       },
     });
 
+    // Fetch wfmShifts (ShiftTypes)
+    const wfmShifts = await prisma.shiftType.findMany();
+
     const shiftType = timeOffRequest.reason || "Default Shift Type";
     const shiftColor =
-      wfmShifts.find((shift) => shift.shift_name === shiftType)?.color || "";
+      wfmShifts.find((shift) => shift.name === shiftType)?.color || "";
 
     if (isApproved) {
       const schedulersToUpdate = await prisma.scheduler.findMany({
@@ -154,6 +155,18 @@ export async function PUT(
     }
 
     const { startDate, endDate, reason } = await req.json();
+
+    // Ensure the requested dates are in the future
+    const currentDate = new Date();
+    currentDate.setHours(0, 0, 0, 0); // Normalize current date to start of day for comparison
+    if (new Date(startDate) < currentDate) {
+      return new NextResponse(
+        JSON.stringify({
+          error: "Time-off requests must be for future dates.",
+        }),
+        { status: 400 }
+      );
+    }
 
     // Update the timeOff request details
     await prisma.timeOff.update({

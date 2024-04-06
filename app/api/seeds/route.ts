@@ -9,6 +9,7 @@ import {
 import { encryptPassword, getErrorResponse } from "@/lib/helpers";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma.db";
+import wfmShifts from "@/config/wfmShifts";
 
 export async function GET(req: Request) {
   try {
@@ -51,6 +52,14 @@ export async function GET(req: Request) {
       await prisma.clientPermission.deleteMany({});
       await prisma.role.deleteMany({});
       await prisma.team.deleteMany({});
+      await prisma.shiftType.deleteMany({});
+    }
+
+    // Create shift types
+    for (const shift of wfmShifts) {
+      await prisma.shiftType.create({
+        data: shift,
+      });
     }
 
     // Create roles or update if exists
@@ -177,6 +186,7 @@ export async function GET(req: Request) {
       permissions: await prisma.permission.count({}),
       clientPermissions: await prisma.clientPermission.count({}),
       roles: await prisma.role.count({}),
+      shiftTypes: await prisma.shiftType.count({}),
     });
   } catch ({ status = 500, message }: any) {
     return getErrorResponse(message, status);

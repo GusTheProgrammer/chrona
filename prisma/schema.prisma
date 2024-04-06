@@ -113,7 +113,6 @@ model Shift {
   id        String   @id @default(dbgenerated("nanoid()")) @db.VarChar(21)
   name      String
   color     String
-  code      Int
   startTime DateTime
   endTime   DateTime
 
@@ -123,6 +122,14 @@ model Shift {
   updatedAt DateTime @updatedAt
 
   @@map("shifts")
+}
+
+model ShiftType {
+  id    String @id @default(dbgenerated("nanoid()")) @db.VarChar(21)
+  name  String @unique
+  color String
+
+  @@map("shit_types")
 }
 
 model TimeOff {
@@ -152,7 +159,6 @@ view SchedulerCalendar {
   shift_id     String?
   shift_name   String?
   shift_color  String?
-  shift_code   Int?
   start_time   DateTime?
   end_time     DateTime?
 

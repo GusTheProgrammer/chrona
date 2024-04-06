@@ -30,8 +30,6 @@ type TimeOffRequest = {
   actions: JSX.Element | null;
 };
 
-const role = JSON.parse(localStorage.getItem("userInfo")!).state.userInfo.role;
-
 export const getColumns = (
   handleTimeoffRequestAction: {
     (id: any, isApproved: any): Promise<void>;
@@ -48,6 +46,8 @@ export const getColumns = (
   },
   handleDeleteAction: { (id: string): Promise<void>; (arg0: number): void }
 ) => {
+  const role = JSON.parse(localStorage.getItem("userInfo")!).state.userInfo
+    .role;
   const columns: ColumnDef<TimeOffRequest>[] = [
     {
       id: "select",

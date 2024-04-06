@@ -7,10 +7,35 @@ import dynamic from "next/dynamic";
 import { useQueryClient } from "@tanstack/react-query";
 
 import { generateColumns } from "./columns";
-import TimeoffForm from "@/components/TimeoffForm";
-import wfmShifts from "@/config/wfmShifts";
 
 const Page = () => {
+  const wfmShifts = [
+    {
+      name: "Working from Office",
+      color:
+        "bg-blue-400 dark:bg-transparent dark:bg-gradient-to-r dark:from-cyan-500 dark:to-blue-500",
+    },
+    {
+      name: "Working from Home",
+      color:
+        "bg-purple-400 dark:bg-transparent dark:bg-gradient-to-r dark:from-purple-500 dark:to-pink-500",
+    },
+    {
+      name: "Vacation",
+      color:
+        "bg-red-400 dark:bg-transparent dark:bg-gradient-to-r dark:from-red-500 dark:to-orange-500",
+    },
+    {
+      name: "Sick Leave",
+      color:
+        "bg-yellow-400 dark:bg-transparent dark:bg-gradient-to-r dark:from-yellow-500 dark:to-lime-500",
+    },
+    {
+      name: "Personal Time",
+      color:
+        "bg-green-400 dark:bg-transparent dark:bg-gradient-to-r dark:from-green-500 dark:to-teal-500",
+    },
+  ];
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
   const [limit, setLimit] = useState(7);
@@ -23,7 +48,7 @@ const Page = () => {
   const [selectedShift, setSelectedShift] = useState(null);
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const [selectedShiftName, setSelectedShiftName] = useState(
-    wfmShifts[0]?.shift_name
+    wfmShifts[0]?.name
   );
   const [selectedCell, setSelectedCell] = useState(null);
 
@@ -55,7 +80,7 @@ const Page = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const shift = wfmShifts.find((s) => s.shift_name === selectedShiftName);
+    const shift = wfmShifts.find((s) => s.name === selectedShiftName);
     const shiftColor = shift ? shift.color : null;
     const updatedShiftData = {
       shift_name: selectedShiftName,

@@ -25,6 +25,54 @@ export async function POST(req: Request) {
       );
     }
 
+    // Ensure the requested dates are in the future
+    const currentDate = new Date();
+    currentDate.setHours(0, 0, 0, 0); // Normalize current date to start of day for comparison
+    if (new Date(startDate) < currentDate) {
+      return new NextResponse(
+        JSON.stringify({
+          error: "Time-off requests must be for future dates.",
+        }),
+        { status: 400 }
+      );
+    }
+
+    // Fetch existing time-off requests that are pending or approved for this user
+    const existingRequests = await prisma.timeOff.findMany({
+      where: {
+        userId: userId,
+        AND: [
+          {
+            OR: [{ status: "pending" }, { status: "approved" }],
+          },
+          {
+            AND: [
+              {
+                startDate: {
+                  lte: new Date(endDate),
+                },
+              },
+              {
+                endDate: {
+                  gte: new Date(startDate),
+                },
+              },
+            ],
+          },
+        ],
+      },
+    });
+
+    // Check if the new request dates clash with any existing requests
+    if (existingRequests.length > 0) {
+      return new NextResponse(
+        JSON.stringify({
+          error: "The requested dates clash with an existing time-off request.",
+        }),
+        { status: 400 }
+      );
+    }
+
     // Create the time-off request in the database
     await prisma.timeOff.create({
       data: {
