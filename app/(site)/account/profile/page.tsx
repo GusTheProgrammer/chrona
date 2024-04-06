@@ -34,12 +34,12 @@ const Profile = () => {
     key: ["profiles"],
     method: "GET",
     url: `profile`,
-  })?.get;
+  })?.GET;
   const updateApi = useApi({
     key: ["profiles"],
     method: "PUT",
     url: `profile`,
-  })?.put;
+  })?.PUT;
 
   const FormSchema = z
     .object({

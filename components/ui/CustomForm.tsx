@@ -95,7 +95,7 @@ export default function CustomFormField({
     key: [props?.key!, props?.url!],
     method: 'GET',
     url: props?.url + `&q=${search}`,
-  })?.get
+  })?.GET
 
   const [value] = useDebounce(search, 1000)
 

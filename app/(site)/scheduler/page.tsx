@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { use, useEffect, useState } from "react";
 import useApi from "@/hooks/useApi";
 import { Scheduler } from "@/components/Scheduler";
 import dynamic from "next/dynamic";
@@ -9,50 +9,46 @@ import { useQueryClient } from "@tanstack/react-query";
 import { generateColumns } from "./columns";
 
 const Page = () => {
+  const wfmShifts = [
+    {
+      name: "Working from Office",
+      color:
+        "bg-blue-400 dark:bg-transparent dark:bg-gradient-to-r dark:from-cyan-500 dark:to-blue-500",
+    },
+    {
+      name: "Working from Home",
+      color:
+        "bg-purple-400 dark:bg-transparent dark:bg-gradient-to-r dark:from-purple-500 dark:to-pink-500",
+    },
+    {
+      name: "Vacation",
+      color:
+        "bg-red-400 dark:bg-transparent dark:bg-gradient-to-r dark:from-red-500 dark:to-orange-500",
+    },
+    {
+      name: "Sick Leave",
+      color:
+        "bg-yellow-400 dark:bg-transparent dark:bg-gradient-to-r dark:from-yellow-500 dark:to-lime-500",
+    },
+    {
+      name: "Personal Time",
+      color:
+        "bg-green-400 dark:bg-transparent dark:bg-gradient-to-r dark:from-green-500 dark:to-teal-500",
+    },
+  ];
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
   const [limit, setLimit] = useState(7);
   const [q, setQ] = useState("");
   const [dynamicColumns, setDynamicColumns] = useState([]); // State to hold the dynamic columns
   const [transformedData, setTransformedData] = useState([]); // State for the transformed data
-  const teamId = "a75POUlJzMDmaJtz0JCxa";
-  const wfmShifts = [
-    {
-      shift_id: 1,
-      shift_name: "Working from Office",
-      color:
-        "bg-blue-400 dark:bg-transparent dark:bg-gradient-to-r dark:from-cyan-500 dark:to-blue-500",
-    },
-    {
-      shift_id: 2,
-      shift_name: "Working from Home",
-      color:
-        "bg-purple-400 dark:bg-transparent dark:bg-gradient-to-r dark:from-purple-500 dark:to-pink-500",
-    },
-    {
-      shift_id: 3,
-      shift_name: "Vacation",
-      color:
-        "bg-red-400 dark:bg-transparent dark:bg-gradient-to-r dark:from-red-500 dark:to-orange-500",
-    },
-    {
-      shift_id: 4,
-      shift_name: "Sick Leave",
-      color:
-        "bg-yellow-400 dark:bg-transparent dark:bg-gradient-to-r dark:from-yellow-500 dark:to-lime-500",
-    },
-    {
-      shift_id: 5,
-      shift_name: "Personal Time",
-      color:
-        "bg-green-400 dark:bg-transparent dark:bg-gradient-to-r dark:from-green-500 dark:to-teal-500",
-    },
-  ];
+  const teamId = JSON.parse(localStorage.getItem("userInfo")!).state.userInfo
+    .teamId;
 
   const [selectedShift, setSelectedShift] = useState(null);
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const [selectedShiftName, setSelectedShiftName] = useState(
-    wfmShifts[0]?.shift_name
+    wfmShifts[0]?.name
   );
   const [selectedCell, setSelectedCell] = useState(null);
 
@@ -62,17 +58,17 @@ const Page = () => {
     key: ["scheduler", page],
     method: "GET",
     url: `scheduler?teamId=${teamId}&page=${page}&limit=${limit}&q=${q}`,
-  })?.get;
+  })?.GET;
 
-  const putApi = useApi({
+  const editSchedulerApi = useApi({
     key: ["scheduler"],
     method: "PUT",
     url: "scheduler",
-  })?.put;
+  })?.PUT;
 
   const handleUpdateShift = async (updatedShiftData) => {
     try {
-      await putApi.mutateAsync({
+      await editSchedulerApi.mutateAsync({
         id: selectedShift.scheduler_id,
         ...updatedShiftData,
       });
@@ -84,7 +80,7 @@ const Page = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const shift = wfmShifts.find((s) => s.shift_name === selectedShiftName);
+    const shift = wfmShifts.find((s) => s.name === selectedShiftName);
     const shiftColor = shift ? shift.color : null;
     const updatedShiftData = {
       shift_name: selectedShiftName,

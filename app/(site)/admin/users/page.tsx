@@ -72,25 +72,25 @@ const Page = () => {
     key: ["users"],
     method: "GET",
     url: `users?page=${page}&q=${q}&limit=${limit}`,
-  })?.get;
+  })?.GET;
 
   const postApi = useApi({
     key: ["users"],
     method: "POST",
     url: `users`,
-  })?.post;
+  })?.POST;
 
   const updateApi = useApi({
     key: ["users"],
     method: "PUT",
     url: `users`,
-  })?.put;
+  })?.PUT;
 
   const deleteApi = useApi({
     key: ["users"],
     method: "DELETE",
     url: `users`,
-  })?.deleteObj;
+  })?.DELETE;
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),

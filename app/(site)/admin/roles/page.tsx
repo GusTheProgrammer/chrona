@@ -62,37 +62,37 @@ const Page = () => {
     key: ["roles"],
     method: "GET",
     url: `roles?page=${page}&q=${q}&limit=${limit}`,
-  })?.get;
+  })?.GET;
 
   const postApi = useApi({
     key: ["roles"],
     method: "POST",
     url: `roles`,
-  })?.post;
+  })?.POST;
 
   const updateApi = useApi({
     key: ["roles"],
     method: "PUT",
     url: `roles`,
-  })?.put;
+  })?.PUT;
 
   const deleteApi = useApi({
     key: ["roles"],
     method: "DELETE",
     url: `roles`,
-  })?.deleteObj;
+  })?.DELETE;
 
   const getClientPermissionsApi = useApi({
     key: ["client-permissions"],
     method: "GET",
     url: `client-permissions?page=${page}&q=${q}&limit=${250}`,
-  })?.get;
+  })?.GET;
 
   const getPermissionsApi = useApi({
     key: ["permissions"],
     method: "GET",
     url: `permissions?page=${page}&q=${q}&limit=${250}`,
-  })?.get;
+  })?.GET;
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),

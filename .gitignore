@@ -52,3 +52,4 @@ migrations
 
 /prisma/migrations
 node_modules
+/.idea

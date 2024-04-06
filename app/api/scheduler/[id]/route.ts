@@ -29,14 +29,13 @@ export async function PUT(
     }
 
     const body = await req.json();
-    const { shift_name, shift_code, start_time, end_time, shift_color } = body;
+    const { shift_name, start_time, end_time, shift_color } = body;
 
     // Update the shift record
     const updatedShift = await prisma.shift.update({
       where: { id: scheduler.shift_id },
       data: {
         name: shift_name,
-        code: shift_code,
         startTime: new Date(start_time),
         endTime: new Date(end_time),
         color: shift_color,
