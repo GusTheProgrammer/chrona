@@ -50,7 +50,7 @@ export const generateColumns = (apiData: any): ColumnDef<Scheduler>[] => {
       accessorKey: date, // accessorKey should match the keys in your data
       header: ({ column }) => (
         <div className="text-center">
-          <p className="text-sm font-semibold">{dayName}</p>{" "}
+          <p className="text-sm font-semibold">{dayName}</p>
           <p className="text-xs">{formattedDate}</p>
         </div>
       ),

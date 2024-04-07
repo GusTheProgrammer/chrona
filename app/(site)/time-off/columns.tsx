@@ -1,4 +1,4 @@
-import { ColumnDef } from "@tanstack/react-table";
+import { ColumnDef, Row } from "@tanstack/react-table";
 import { ArrowUpDown, PencilLineIcon, Trash2 } from "lucide-react";
 import { MoreHorizontal } from "lucide-react";
 
@@ -44,7 +44,8 @@ export const getColumns = (
     }): Promise<void>;
     (arg0: TimeOffRequest): void;
   },
-  handleDeleteAction: { (id: string): Promise<void>; (arg0: number): void }
+  handleDeleteAction: { (id: string): Promise<void>; (arg0: number): void },
+  includeManageColumn = false
 ) => {
   const role = JSON.parse(localStorage.getItem("userInfo")!).state.userInfo
     .role;
@@ -167,26 +168,37 @@ export const getColumns = (
     },
   ];
 
-  if (role === "MANAGER" || role === "SUPER_ADMIN") {
+  if (includeManageColumn && (role === "MANAGER" || role === "SUPER_ADMIN")) {
     const manageColumn = {
-      id: "manage",
-      header: "Manage",
-      cell: ({ row }) => (
-        <div className="flex space-x-2">
-          <Button
-            className="bg-green-500"
-            onClick={() => handleTimeoffRequestAction(row.original.id, true)}
-          >
-            Approve
-          </Button>
-          <Button
-            className="bg-red-500"
-            onClick={() => handleTimeoffRequestAction(row.original.id, false)}
-          >
-            Decline
-          </Button>
-        </div>
-      ),
+      id: "action",
+      header: () => <div className="text-center">Action</div>,
+      cell: ({ row }: { row: Row<TimeOffRequest> }) => {
+        const status: TimeOffStatus = row.original.status;
+
+        if (status === TimeOffStatus.Pending) {
+          return (
+            <div className="flex space-x-2">
+              <Button
+                className="bg-green-500"
+                onClick={() =>
+                  handleTimeoffRequestAction(row.original.id, true)
+                }
+              >
+                Approve
+              </Button>
+              <Button
+                className="bg-red-500"
+                onClick={() =>
+                  handleTimeoffRequestAction(row.original.id, false)
+                }
+              >
+                Decline
+              </Button>
+            </div>
+          );
+        }
+        return null;
+      },
       enableSorting: false,
     };
     columns.splice(columns.length - 1, 0, manageColumn);

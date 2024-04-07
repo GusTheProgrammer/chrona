@@ -12,16 +12,17 @@ import { useState } from "react";
 import Message from "@/components/Message";
 
 const Page = () => {
-  const [selectedTimeOffRequest, setSelectedTimeOffRequest] = useState(null);
+  const [selectedTimeOffRequest, setSelectedTimeOffRequest] = useState<{
+    id: any;
+    startDate: Date;
+    endDate: Date;
+    shiftType: any;
+  } | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const queryClient = useQueryClient();
 
-  const {
-    data: timeOffRequests,
-    isLoading,
-    error,
-  } = useApi({
+  const getTimeOffApi = useApi({
     key: ["time-off"],
     method: "GET",
     url: `time-off`,
@@ -64,22 +65,20 @@ const Page = () => {
       shift.name !== "Working from Home" && shift.name !== "Working from Office"
   );
   const handleTimeOffFormSubmit = async (formData: any) => {
+    console.log("formData", formData);
     try {
-      // Check if we are editing an existing time off request
       if (selectedTimeOffRequest) {
-        // Adjust the formData as necessary for your API expectations
         await editTimeoffApi?.mutateAsync({
           id: selectedTimeOffRequest.id,
           ...formData,
         });
       } else {
-        // Create a new time off request as before
         await createTimeoffApi?.mutateAsync({
           ...formData,
         });
       }
-      queryClient.invalidateQueries(["time-off"]);
-      setSelectedTimeOffRequest(null); // Reset the selected request for editing
+      queryClient.invalidateQueries({ queryKey: ["time-off"] });
+      setSelectedTimeOffRequest(null);
     } catch (error) {
       console.error("Error submitting Time off request:", error);
     }
@@ -97,7 +96,7 @@ const Page = () => {
         ...payload,
         url: actionUrl,
       });
-      queryClient.invalidateQueries(["time-off"]); // Adjust the query key as needed
+      queryClient.invalidateQueries({ queryKey: ["time-off"] });
     } catch (error) {
       console.error("Error editing time off request:", error);
     }
@@ -107,25 +106,25 @@ const Page = () => {
     id: any;
     dateFrom: string | number | Date;
     dateTo: string | number | Date;
-    reason: any;
+    reason: string;
   }) => {
     const initialValues = {
       id: timeOffRequest.id,
-      startDate: new Date(timeOffRequest.dateFrom), // Convert to Date object
-      endDate: new Date(timeOffRequest.dateTo), // Convert to Date object
-      shiftType: timeOffRequest.reason, // Assuming reason maps to shiftType
+      startDate: new Date(timeOffRequest.dateFrom),
+      endDate: new Date(timeOffRequest.dateTo),
+      shiftType: timeOffRequest.reason,
     };
     setSelectedTimeOffRequest(initialValues);
     setIsDialogOpen(true);
   };
 
-  const handleDeleteAction = async (id: string) => {
+  const handleDeleteAction = async (id: string | number) => {
     try {
       // Assuming your API expects the ID as part of the URL path
-      await deleteTimeoffApi?.mutateAsync(id);
+      await deleteTimeoffApi?.mutateAsync(id.toString());
 
       // Invalidate queries as needed
-      queryClient.invalidateQueries(["time-off"]);
+      queryClient.invalidateQueries({ queryKey: ["time-off"] });
     } catch (error) {
       console.error("Error deleting time off request:", error);
     }
@@ -140,14 +139,24 @@ const Page = () => {
     }
   };
 
+  const hasPendingRequests =
+    getTimeOffApi?.data?.some(
+      (request: { status: string }) => request.status === "pending"
+    ) || false;
+
   const columns = getColumns(
     handleTimeoffRequestAction,
     handleEditAction,
-    handleDeleteAction
+    handleDeleteAction,
+    hasPendingRequests
   );
 
   return (
     <div className="w-full">
+      {getTimeOffApi?.isLoading && <p>Loading...</p>}
+      {getTimeOffApi?.isError && (
+        <Message value={getTimeOffApi?.error} type="error" />
+      )}
       {timeoffActionApi?.isError && (
         <Message value={timeoffActionApi?.error} type="error" />
       )}
@@ -172,13 +181,16 @@ const Page = () => {
       {createTimeoffApi?.isSuccess && (
         <Message value="Time off request created successfully" type="success" />
       )}
+      {getWfmShifts?.isError && (
+        <Message value={getWfmShifts?.error} type="error" />
+      )}
 
-      <DataTable columns={columns} data={timeOffRequests || []} />
+      <DataTable columns={columns} data={getTimeOffApi?.data || []} />
       <div className="flex items-center justify-start space-x-2 py-4">
         <TimeoffForm
           onSubmit={handleTimeOffFormSubmit}
           wfmShifts={filteredWfmShifts}
-          initialValues={selectedTimeOffRequest}
+          initialValues={selectedTimeOffRequest || undefined}
           isDialogOpen={isDialogOpen}
           setIsDialogOpen={handleDialogClose}
         />
