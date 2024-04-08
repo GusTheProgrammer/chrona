@@ -20,6 +20,13 @@ import {
   DialogTrigger,
   DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useForm } from "react-hook-form";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -184,15 +191,38 @@ export default function TimeoffForm({
                 )}
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <Calendar
-                initialFocus
-                mode="range"
-                defaultMonth={date?.from}
-                selected={date}
-                onSelect={setDate}
-                numberOfMonths={2}
-              />
+            <PopoverContent className="flex w-auto flex-col space-y-2 p-2">
+              <Select
+                onValueChange={(value) => {
+                  const startDate = date?.from || new Date();
+                  const daysToAdd = parseInt(value, 10);
+                  setDate({
+                    from: startDate,
+                    to: addDays(startDate, daysToAdd),
+                  });
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select Duration" />
+                </SelectTrigger>
+                <SelectContent position="popper">
+                  <SelectItem value="7">1 Week</SelectItem>
+                  <SelectItem value="14">Fortnight</SelectItem>
+                  <SelectItem value="21">3 Weeks</SelectItem>
+                  <SelectItem value="28">Month</SelectItem>
+                </SelectContent>
+              </Select>
+              <div className="rounded-md border">
+                <Calendar
+                  initialFocus
+                  mode="range"
+                  defaultMonth={date?.from}
+                  selected={date}
+                  onSelect={setDate}
+                  numberOfMonths={2}
+                  disabled={(date) => date < new Date()}
+                />
+              </div>
             </PopoverContent>
           </Popover>
           <DialogFooter>

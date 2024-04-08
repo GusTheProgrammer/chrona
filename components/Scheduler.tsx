@@ -30,7 +30,15 @@ import {
   DropdownMenuCheckboxItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { addDays, format } from "date-fns";
 
+import { cn } from "@/lib/utils";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import {
   HoverCard,
   HoverCardContent,
@@ -43,6 +51,8 @@ import { Button } from "@/components/ui/button";
 import { DataTablePagination } from "@/components/DataTablePagination";
 import SchedulerEditPopover from "@/components/SchedulerEditPopover";
 import { useState } from "react";
+import { DateRange } from "react-day-picker";
+
 interface SchedulerProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
@@ -60,6 +70,8 @@ interface SchedulerProps<TData, TValue> {
   selectedCell: any;
   selectedShiftName: string;
   setSelectedShiftName: (shiftName: string) => void;
+  setStartDate: (date: Date | null) => void;
+  setEndDate: (date: Date | null) => void;
 }
 
 export function Scheduler<TData, TValue>({
@@ -79,13 +91,15 @@ export function Scheduler<TData, TValue>({
   selectedCell,
   selectedShiftName,
   setSelectedShiftName,
+  // Date range picker props
+  setStartDate,
+  setEndDate,
 }: SchedulerProps<TData, TValue>) {
-  console.log("wfmShifts", wfmShifts);
   const [sorting, setSorting] = useState<SortingState>([
     { id: "fullname", desc: false },
   ]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
-
+  const [date, setDate] = useState<DateRange | undefined>();
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
 
   const table = useReactTable({
@@ -125,6 +139,52 @@ export function Scheduler<TData, TValue>({
           }
           className="max-w-sm"
         />
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              id="date"
+              variant={"outline"}
+              className={cn(
+                "w-[300px] justify-start text-left font-normal",
+                !date && "text-muted-foreground"
+              )}
+            >
+              <CalendarIcon className="mr-2 h-4 w-4" />
+              {date?.from ? (
+                date.to ? (
+                  <>
+                    {format(date.from, "LLL dd, y")} -{" "}
+                    {format(date.to, "LLL dd, y")}
+                  </>
+                ) : (
+                  format(date.from, "LLL dd, y")
+                )
+              ) : (
+                <span>Pick a date</span>
+              )}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="start">
+            <Calendar
+              initialFocus
+              mode="range"
+              defaultMonth={date?.from}
+              selected={date}
+              onSelect={(selectedRange) => {
+                setDate(selectedRange);
+                const formattedFrom = selectedRange?.from
+                  ? format(selectedRange.from, "dd-MM-yyyy")
+                  : "";
+                const formattedTo = selectedRange?.to
+                  ? format(selectedRange.to, "dd-MM-yyyy")
+                  : "";
+                setStartDate(formattedFrom);
+                setEndDate(formattedTo);
+              }}
+              numberOfMonths={2}
+            />
+          </PopoverContent>
+        </Popover>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" className="ml-auto">
@@ -159,8 +219,20 @@ export function Scheduler<TData, TValue>({
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => {
+                  // Check if the header represents a date and if it's a weekend
+                  const headerDate =
+                    header.id !== "fullname" ? new Date(header.id) : null;
+                  const isWeekend = headerDate
+                    ? headerDate.getDay() === 0 || headerDate.getDay() === 6
+                    : false;
+
                   return (
-                    <TableHead key={header.id}>
+                    <TableHead
+                      key={header.id}
+                      className={
+                        isWeekend ? "dark:bg-stone-900 bg-stone-100	" : ""
+                      }
+                    >
                       {header.isPlaceholder
                         ? null
                         : flexRender(
@@ -173,6 +245,7 @@ export function Scheduler<TData, TValue>({
               </TableRow>
             ))}
           </TableHeader>
+
           <TableBody>
             {hasData ? (
               table.getRowModel().rows.map((row) => (
@@ -181,8 +254,9 @@ export function Scheduler<TData, TValue>({
                   data-state={row.getIsSelected() && "selected"}
                 >
                   {row.getVisibleCells().map((cell) => {
-                    const cellData = cell.row.original[cell.column.id];
-
+                    const cellData = (
+                      cell.row.original as { [key: string]: any }
+                    )[cell.column.id];
                     if (cellData && typeof cellData === "object") {
                       return (
                         <TableCell
