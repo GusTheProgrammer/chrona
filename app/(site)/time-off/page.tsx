@@ -65,7 +65,6 @@ const Page = () => {
       shift.name !== "Working from Home" && shift.name !== "Working from Office"
   );
   const handleTimeOffFormSubmit = async (formData: any) => {
-    console.log("formData", formData);
     try {
       if (selectedTimeOffRequest) {
         await editTimeoffApi?.mutateAsync({
@@ -184,8 +183,6 @@ const Page = () => {
       {getWfmShifts?.isError && (
         <Message value={getWfmShifts?.error} type="error" />
       )}
-
-      <DataTable columns={columns} data={getTimeOffApi?.data || []} />
       <div className="flex items-center justify-start space-x-2 py-4">
         <TimeoffForm
           onSubmit={handleTimeOffFormSubmit}
@@ -195,6 +192,7 @@ const Page = () => {
           setIsDialogOpen={handleDialogClose}
         />
       </div>
+      <DataTable columns={columns} data={getTimeOffApi?.data || []} />
     </div>
   );
 };

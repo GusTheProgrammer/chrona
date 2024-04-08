@@ -25,6 +25,11 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next ./.next
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/public ./public
+COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/nanoid_function.sql ./nanoid_function.sql
+COPY --from=builder /app/scheduler_functions.sql ./scheduler_functions.sql
+COPY --from=builder /app/prisma_migrate.sh /app/prisma_migrate.sh
+COPY --chown=nextjs:nodejs prisma_migrate.sh /app/prisma_migrate.sh
 
 COPY --chown=nextjs:nodejs prisma_migrate.sh /app/prisma_migrate.sh
 RUN chmod +x /app/prisma_migrate.sh

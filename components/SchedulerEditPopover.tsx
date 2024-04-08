@@ -50,7 +50,7 @@ const SchedulerEditPopover = ({
       const end = new Date(selectedShift.end_time);
       setStartTime(start);
       setEndTime(end);
-      setSelectedShiftName(selectedShift.name);
+      setSelectedShiftName(selectedShift.shift_name);
     }
   }, [selectedShift]);
 

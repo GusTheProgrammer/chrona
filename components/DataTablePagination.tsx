@@ -14,15 +14,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 interface DataTablePaginationProps<TData> {
   table: Table<TData>;
+  setPage: (page: number) => void;
+  setLimit: (limit: number) => void;
 }
 
 export function DataTablePagination<TData>({
   table,
-  setPage, // Add setPage callback prop
-  setLimit, // Add setLimit callback prop
+  setPage,
+  setLimit,
 }: DataTablePaginationProps<TData>) {
   const handleFirstPage = () => {
     setPage(1);
@@ -39,7 +43,7 @@ export function DataTablePagination<TData>({
       </div>
       <div className="flex items-center space-x-6 lg:space-x-8">
         <div className="flex items-center space-x-2">
-          <p className="text-sm font-medium">Rows per page</p>
+          <p className="text-sm font-medium">Employees per page</p>
           <Select
             value={`${table.getState().pagination.pageSize}`}
             onValueChange={(value) => {
@@ -57,6 +61,16 @@ export function DataTablePagination<TData>({
               ))}
             </SelectContent>
           </Select>
+        </div>
+        <div className="flex items-center space-x-2">
+          <p className="text-sm font-medium">Days per page</p>
+          <Input
+            type="number"
+            className="h-8 w-[70px]"
+            value={table.getState().pagination.pageSize}
+            onChange={(e) => setLimit(Number(e.target.value))}
+            min={1} // Set minimum number of rows per page
+          />
         </div>
         <div className="flex w-[100px] items-center justify-center text-sm font-medium">
           Page {table.getState().pagination.pageIndex + 1} of{" "}

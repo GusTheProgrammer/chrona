@@ -5,11 +5,11 @@ import useApi from "@/hooks/useApi";
 import { Scheduler } from "@/components/Scheduler";
 import dynamic from "next/dynamic";
 import { useQueryClient } from "@tanstack/react-query";
-
-import { generateColumns } from "./columns";
+import { getColumns } from "./columns";
+import { start } from "repl";
 
 const Page = () => {
-  const wfmShifts = [
+  const [wfmShifts, setWfmShifts] = useState([
     {
       name: "Working from Office",
       color:
@@ -35,29 +35,32 @@ const Page = () => {
       color:
         "bg-green-400 dark:bg-transparent dark:bg-gradient-to-r dark:from-green-500 dark:to-teal-500",
     },
-  ];
-  const [page, setPage] = useState(1);
+  ]); // State to store wfmShifts data
+  const [page, setPage] = useState("");
   const [totalPages, setTotalPages] = useState(0);
   const [limit, setLimit] = useState(7);
-  const [q, setQ] = useState("");
-  const [dynamicColumns, setDynamicColumns] = useState([]); // State to hold the dynamic columns
-  const [transformedData, setTransformedData] = useState([]); // State for the transformed data
+  const [columns, setColumns] = useState([]);
+  const [data, setData] = useState([]);
+  const [selectedShift, setSelectedShift] = useState(null);
+  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
+  const [selectedShiftName, setSelectedShiftName] = useState();
+  const [selectedCell, setSelectedCell] = useState(null);
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
   const teamId = JSON.parse(localStorage.getItem("userInfo")!).state.userInfo
     .teamId;
 
-  const [selectedShift, setSelectedShift] = useState(null);
-  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
-  const [selectedShiftName, setSelectedShiftName] = useState(
-    wfmShifts[0]?.name
-  );
-  const [selectedCell, setSelectedCell] = useState(null);
-
   const queryClient = useQueryClient();
+  const getWfmShifts = useApi({
+    key: ["wfm-shifts"],
+    method: "GET",
+    url: "wfm-shifts",
+  }).GET;
 
   const getApi = useApi({
-    key: ["scheduler", page],
+    key: ["scheduler", page, limit, startDate, endDate],
     method: "GET",
-    url: `scheduler?teamId=${teamId}&page=${page}&limit=${limit}&q=${q}`,
+    url: `scheduler?teamId=${teamId}&page=${page}&limit=${limit}&start=${startDate}&end=${endDate}`,
   })?.GET;
 
   const editSchedulerApi = useApi({
@@ -66,30 +69,36 @@ const Page = () => {
     url: "scheduler",
   })?.PUT;
 
-  const handleUpdateShift = async (updatedShiftData) => {
-    try {
-      await editSchedulerApi.mutateAsync({
-        id: selectedShift.scheduler_id,
-        ...updatedShiftData,
-      });
-      queryClient.invalidateQueries(["scheduler", page]);
-    } catch (error) {
-      console.error("Error updating shift:", error);
-    }
-  };
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e: {
+    preventDefault: () => void;
+    target: { start_time: { value: any }; end_time: { value: any } };
+  }) => {
     e.preventDefault();
+
     const shift = wfmShifts.find((s) => s.name === selectedShiftName);
     const shiftColor = shift ? shift.color : null;
+
     const updatedShiftData = {
       shift_name: selectedShiftName,
       start_time: e.target.start_time.value,
       end_time: e.target.end_time.value,
       shift_color: shiftColor,
     };
-    handleUpdateShift(updatedShiftData);
-    setIsPopoverOpen(false);
+
+    try {
+      await editSchedulerApi?.mutateAsync({
+        id: selectedShift.scheduler_id,
+        ...updatedShiftData,
+      });
+
+      // Invalidate the queries to refetch the data
+      queryClient.invalidateQueries({ queryKey: ["scheduler", page] });
+
+      // Close the popover/modal after successful submission
+      setIsPopoverOpen(false);
+    } catch (error) {
+      console.error("Error updating shift:", error);
+    }
   };
 
   const openPopover = (shift, event) => {
@@ -102,41 +111,27 @@ const Page = () => {
     setIsPopoverOpen(true);
   };
 
-  function transformData(apiResponse) {
-    const recordsMap = new Map();
-
-    Object.entries(apiResponse.data).forEach(([date, entries]) => {
-      entries.forEach((entry) => {
-        const { fullname } = entry;
-
-        if (!recordsMap.has(fullname)) {
-          recordsMap.set(fullname, { fullname });
-        }
-
-        const record = recordsMap.get(fullname);
-        record[date] = entry;
-      });
-    });
-
-    return Array.from(recordsMap.values());
-  }
   useEffect(() => {
     if (getApi?.data) {
-      const newData = transformData(getApi.data);
-      setTransformedData(newData);
+      const tableData = getApi?.data;
+      setData(tableData.data);
 
-      const newColumns = generateColumns(getApi.data);
-      setDynamicColumns(newColumns);
-
-      setTotalPages(getApi.data.pages);
+      setColumns(getColumns(tableData));
+      setPage(tableData.page);
+      setTotalPages(tableData.totalPages);
     }
-  }, [getApi?.data]);
+
+    if (getWfmShifts?.data) {
+      setWfmShifts(getWfmShifts.data || []);
+      setSelectedShiftName(getWfmShifts.data[0]?.name || "");
+    }
+  }, [getApi?.data, getWfmShifts?.data]);
 
   return (
     <div>
       <Scheduler
-        columns={dynamicColumns}
-        data={transformedData}
+        columns={columns}
+        data={data}
         page={page}
         setPage={setPage}
         totalPages={totalPages}
@@ -148,9 +143,12 @@ const Page = () => {
         selectedShiftName={selectedShiftName}
         selectedShift={selectedShift}
         setSelectedShiftName={setSelectedShiftName}
-        handleSubmit={handleSubmit}
         openPopover={openPopover}
+        handleSubmit={handleSubmit}
         selectedCell={selectedCell}
+        // Date range picker props
+        setStartDate={setStartDate}
+        setEndDate={setEndDate}
       />
     </div>
   );
