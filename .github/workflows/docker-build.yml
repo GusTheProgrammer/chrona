@@ -13,7 +13,8 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
-    image: ghaithchaal/node-local-dev:latest
+    container:
+      image: ghaithchaal/node-local-dev:latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
