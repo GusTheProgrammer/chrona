@@ -57,7 +57,7 @@ interface SchedulerProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
   page: number;
-  setPage: (page: number) => void;
+  setPage: (page: string) => void;
   limit: number;
   setLimit: (limit: number) => void;
   totalPages: number;
@@ -140,7 +140,7 @@ export function Scheduler<TData, TValue>({
           className="max-w-sm"
         />
         <Popover>
-          <PopoverTrigger asChild>
+          <PopoverTrigger className="mr-auto" asChild>
             <Button
               id="date"
               variant={"outline"}
@@ -180,6 +180,7 @@ export function Scheduler<TData, TValue>({
                   : "";
                 setStartDate(formattedFrom);
                 setEndDate(formattedTo);
+                setPage("");
               }}
               numberOfMonths={2}
             />

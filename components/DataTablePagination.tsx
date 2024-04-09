@@ -19,7 +19,7 @@ import { Label } from "@/components/ui/label";
 
 interface DataTablePaginationProps<TData> {
   table: Table<TData>;
-  setPage: (page: number) => void;
+  setPage: (page: string) => void;
   setLimit: (limit: number) => void;
 }
 
@@ -68,7 +68,10 @@ export function DataTablePagination<TData>({
             type="number"
             className="h-8 w-[70px]"
             value={table.getState().pagination.pageSize}
-            onChange={(e) => setLimit(Number(e.target.value))}
+            onChange={(e) => {
+              setLimit(Number(e.target.value));
+              setPage("");
+            }}
             min={1} // Set minimum number of rows per page
           />
         </div>
