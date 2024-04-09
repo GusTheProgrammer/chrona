@@ -23,6 +23,9 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GH_TOKEN }}
 
+      - name: Setup Docker buildxo use for the build. The cache is used to speed up the build process.
+        uses: docker/setup-buildx-action@v2
+
       - name: Extract Docker metadata
         id: meta
         uses: docker/metadata-action@98669ae865ea3cffbcbaa878cf57c20bbf1c6c38
