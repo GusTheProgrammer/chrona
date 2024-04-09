@@ -9,6 +9,12 @@ on:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
+  SMTP_SERVER: smtp.host.com
+  SMTP_PORT: 465
+  SMTP_USER: user@host.com
+  SMTP_KEY: ${{ secrets.SMTP_KEY }}
+  JWT_SECRET: ${{ secrets.JWT_SECRET }}
+  NEXT_PUBLIC_API_URL: "https://chrona.me/api"
 
 jobs:
   build:
@@ -16,6 +22,15 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
+
+      - name: Setup .env file
+        run: |
+          echo "SMTP_SERVER=${{ env.SMTP_SERVER }}" >> .env
+          echo "SMTP_PORT=${{ env.SMTP_PORT }}" >> .env
+          echo "SMTP_USER=${{ env.SMTP_USER }}" >> .env
+          echo "SMTP_KEY=${{ env.SMTP_KEY }}" >> .env
+          echo "JWT_SECRET=${{ env.JWT_SECRET }}" >> .env
+          echo "NEXT_PUBLIC_API_URL=${{ env.NEXT_PUBLIC_API_URL }}" >> .env
 
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v1
