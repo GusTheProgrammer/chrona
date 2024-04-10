@@ -23,13 +23,15 @@ jobs:
 
       - name: Setup .env file
         run: |
-          echo "SMTP_SERVER=${SMTP_SERVER}" >> .env
-          echo "SMTP_PORT=${SMTP_PORT}" >> .env
-          echo "SMTP_USER=${SMTP_USER}" >> .env
-          echo "SMTP_KEY=${SMTP_KEY}" >> .env
-          echo "JWT_SECRET=${JWT_SECRET}" >> .env
-          echo "NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}" >> .env
-        env: 
+          {
+            echo "SMTP_SERVER=${SMTP_SERVER}"
+            echo "SMTP_PORT=${SMTP_PORT}"
+            echo "SMTP_USER=${SMTP_USER}"
+            echo "SMTP_KEY=${SMTP_KEY}"
+            echo "JWT_SECRET=${JWT_SECRET}"
+            echo "NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}"
+          } >> .env
+        env:
           SMTP_SERVER: ${{ env.SMTP_SERVER }}
           SMTP_PORT: ${{ env.SMTP_PORT }}
           SMTP_USER: ${{ env.SMTP_USER }}
