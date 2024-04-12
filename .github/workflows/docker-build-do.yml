@@ -6,7 +6,7 @@ on:
     branches: ["main"]
 
 env:
-  REGISTRY: ghcr.io
+  REGISTRY: registry.digitalocean.com/chrona-registry
   IMAGE_NAME: ${{ github.repository }}
   SMTP_SERVER: mail.privateemail.com
   SMTP_PORT: 465
@@ -14,11 +14,43 @@ env:
   NEXT_PUBLIC_API_URL: "https://chrona.me/api"
 
 jobs:
+  prepare_release:
+    runs-on: ubuntu-latest
+    outputs:
+      new_version: ${{ steps.semver.outputs.minor }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0 # required to fetch tags
+
+      - name: Get previous tag
+        id: previoustag
+        uses: WyriHaximus/github-action-get-previous-tag@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Get next minor version
+        id: semver
+        uses: WyriHaximus/github-action-next-semvers@v1
+        with:
+          version: ${{ steps.previoustag.outputs.tag }}
+
+      - name: Create release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.semver.outputs.minor }}
+          release_name: Release ${{ steps.semver.outputs.minor }}
+
   build_and_push:
+    needs: prepare_release
     runs-on: ubuntu-latest
     steps:
       - name: Checkout the repo
         uses: actions/checkout@v2
+
       - name: Setup .env file
         run: |
           echo SMTP_SERVER="${SMTP_SERVER}" >> .env
@@ -26,15 +58,20 @@ jobs:
           echo SMTP_USER="${SMTP_USER}" >> .env
           echo NEXT_PUBLIC_API_URL="${NEXT_PUBLIC_API_URL}" >> .env
         shell: bash
+
       - name: Build imag
-        run: docker build -t chrona-app .
+        run: docker build -t ${{ env.IMAGE_NAME }}:${{ needs.prepare_release.outputs.new_version }} .
+
       - name: Install doctl
         uses: digitalocean/action-doctl@v2
         with:
           token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+
       - name: Log in to DO Container Registry
         run: doctl registry login --expiry-seconds 600
+
       - name: Tag image
-        run: docker tag chrona-app registry.digitalocean.com/chrona-registry/chrona:${{github.event.inputs.version }}
+        run: docker tag ${{ env.IMAGE_NAME }}:${{ needs.prepare_release.outputs.new_version }} ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.prepare_release.outputs.new_version }}
+
       - name: Push image to DO Container Registry
-        run: docker push registry.digitalocean.com/chrona-registry/chrona:${{ github.event.inputs.version }}
+        run: docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.prepare_release.outputs.new_version }}
