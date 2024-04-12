@@ -7,7 +7,6 @@ on:
 
 env:
   REGISTRY: registry.digitalocean.com/chrona-registry
-  IMAGE_NAME: ${{ github.repository }}
   SMTP_SERVER: mail.privateemail.com
   SMTP_PORT: 465
   SMTP_USER: support@chrona.me
@@ -59,8 +58,8 @@ jobs:
           echo NEXT_PUBLIC_API_URL="${NEXT_PUBLIC_API_URL}" >> .env
         shell: bash
 
-      - name: Build imag
-        run: docker build -t ${{ env.IMAGE_NAME }}:${{ needs.prepare_release.outputs.new_version }} .
+      - name: Build image
+        run: docker build -t chrona-app:${{ needs.prepare_release.outputs.new_version }} .
 
       - name: Install doctl
         uses: digitalocean/action-doctl@v2
@@ -71,7 +70,7 @@ jobs:
         run: doctl registry login --expiry-seconds 600
 
       - name: Tag image
-        run: docker tag ${{ env.IMAGE_NAME }}:${{ needs.prepare_release.outputs.new_version }} ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.prepare_release.outputs.new_version }}
+        run: docker tag chrona-app:${{ needs.prepare_release.outputs.new_version }} ${{ env.REGISTRY }}/chrona-app:${{ needs.prepare_release.outputs.new_version }}
 
       - name: Push image to DO Container Registry
-        run: docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.prepare_release.outputs.new_version }}
+        run: docker push ${{ env.REGISTRY }}/chrona-app:${{ needs.prepare_release.outputs.new_version }}
