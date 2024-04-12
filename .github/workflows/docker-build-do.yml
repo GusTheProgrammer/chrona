@@ -6,7 +6,9 @@ on:
     branches: ["main"]
 
 env:
-  REGISTRY: registry.digitalocean.com/chrona-registry
+  DO_REGISTRY: registry.digitalocean.com/chrona-registry
+  GH_REGISTRY: ghcr.io/gustheprogrammer
+  IMAGE_NAME: chrona-app
   SMTP_SERVER: mail.privateemail.com
   SMTP_PORT: 465
   SMTP_USER: support@chrona.me
@@ -36,12 +38,18 @@ jobs:
           version: ${{ steps.previoustag.outputs.tag }}
 
       - name: Create release
-        uses: actions/create-release@v1
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const releaseResponse = await github.rest.repos.createRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              tag_name: '${{ steps.semver.outputs.minor }}',
+              name: 'Release ${{ steps.semver.outputs.minor }}',
+              body: 'Docker Image: ghcr.io/${{ env.IMAGE_NAME }}:${{ steps.semver.outputs.minor }}'
+            });
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ steps.semver.outputs.minor }}
-          release_name: Release ${{ steps.semver.outputs.minor }}
 
   build_and_push:
     needs: prepare_release
@@ -58,8 +66,12 @@ jobs:
           echo NEXT_PUBLIC_API_URL="${NEXT_PUBLIC_API_URL}" >> .env
         shell: bash
 
-      - name: Build image
-        run: docker build -t chrona-app:${{ needs.prepare_release.outputs.new_version }} .
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v1
+        with:
+          registry: ${{ env.GH_REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install doctl
         uses: digitalocean/action-doctl@v2
@@ -69,8 +81,17 @@ jobs:
       - name: Log in to DO Container Registry
         run: doctl registry login --expiry-seconds 600
 
-      - name: Tag image
-        run: docker tag chrona-app:${{ needs.prepare_release.outputs.new_version }} ${{ env.REGISTRY }}/chrona-app:${{ needs.prepare_release.outputs.new_version }}
+      - name: Build image
+        run: docker build -t ${{ env.IMAGE_NAME }}:${{ needs.prepare_release.outputs.new_version }} .
+
+      - name: Tag image for DO
+        run: docker tag ${{ env.IMAGE_NAME }}:${{ needs.prepare_release.outputs.new_version }} ${{ env.DO_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.prepare_release.outputs.new_version }}
+
+      - name: Tag image for GHCR
+        run: docker tag ${{ env.IMAGE_NAME }}:${{ needs.prepare_release.outputs.new_version }} ${{ env.GH_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.prepare_release.outputs.new_version }}
 
       - name: Push image to DO Container Registry
-        run: docker push ${{ env.REGISTRY }}/chrona-app:${{ needs.prepare_release.outputs.new_version }}
+        run: docker push ${{ env.DO_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.prepare_release.outputs.new_version }}
+
+      - name: Push image to GHCR
+        run: docker push ${{ env.GH_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.prepare_release.outputs.new_version }}
