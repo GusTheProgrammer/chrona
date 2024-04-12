@@ -85,13 +85,13 @@ jobs:
         run: docker build -t ${{ env.IMAGE_NAME }}:${{ needs.prepare_release.outputs.new_version }} .
 
       - name: Tag image for DO
-        run: docker tag ${{ env.IMAGE_NAME }}:${{ needs.prepare_release.outputs.new_version }} ${{ env.DO_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.prepare_release.outputs.new_version }}
+        run: docker tag ${{ env.IMAGE_NAME }}:${{ needs.prepare_release.outputs.new_version }} ${{ env.DO_REGISTRY }}/${{ env.IMAGE_NAME }}:latest
 
       - name: Tag image for GHCR
         run: docker tag ${{ env.IMAGE_NAME }}:${{ needs.prepare_release.outputs.new_version }} ${{ env.GH_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.prepare_release.outputs.new_version }}
 
       - name: Push image to DO Container Registry
-        run: docker push ${{ env.DO_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.prepare_release.outputs.new_version }}
+        run: docker push ${{ env.DO_REGISTRY }}/${{ env.IMAGE_NAME }}:latest
 
       - name: Push image to GHCR
         run: docker push ${{ env.GH_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.prepare_release.outputs.new_version }}
