@@ -1,10 +1,11 @@
 name: Docker Image Publish
 
 on:
-  push:
-    branches: ["main"]
-  pull_request:
-    branches: ["main"]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Image version"
+        required: true
 
 env:
   REGISTRY: ghcr.io
