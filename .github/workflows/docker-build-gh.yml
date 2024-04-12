@@ -9,11 +9,9 @@ on:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
-  SMTP_SERVER: smtp.host.com
+  SMTP_SERVER: mail.privateemail.com
   SMTP_PORT: 465
-  SMTP_USER: user@host.com
-  SMTP_KEY: ${{ secrets.SMTP_KEY }}
-  JWT_SECRET: ${{ secrets.JWT_SECRET }}
+  SMTP_USER: support@chrona.me
   NEXT_PUBLIC_API_URL: "https://chrona.me/api"
 
 jobs:
@@ -28,8 +26,6 @@ jobs:
           echo SMTP_SERVER="${SMTP_SERVER}" >> .env
           echo SMTP_PORT="${SMTP_PORT}" >> .env
           echo SMTP_USER="${SMTP_USER}" >> .env
-          echo SMTP_KEY="${SMTP_KEY}" >> .env
-          echo JWT_SECRET="${JWT_SECRET}" >> .env
           echo NEXT_PUBLIC_API_URL="${NEXT_PUBLIC_API_URL}" >> .env
         shell: bash
 

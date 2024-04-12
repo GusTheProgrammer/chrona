@@ -1,0 +1,42 @@
+name: Build and publish manually
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Image version"
+        required: true
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+  SMTP_SERVER: mail.privateemail.com
+  SMTP_PORT: 465
+  SMTP_USER: support@chrona.me
+  NEXT_PUBLIC_API_URL: "https://chrona.me/api"
+
+jobs:
+  build_and_push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the repo
+        uses: actions/checkout@v2
+      - name: Setup .env file
+        run: |
+          echo SMTP_SERVER="${SMTP_SERVER}" >> .env
+          echo SMTP_PORT="${SMTP_PORT}" >> .env
+          echo SMTP_USER="${SMTP_USER}" >> .env
+          echo NEXT_PUBLIC_API_URL="${NEXT_PUBLIC_API_URL}" >> .env
+        shell: bash
+      - name: Build imag
+        run: docker build -t chrona-app .
+      - name: Install doctl
+        uses: digitalocean/action-doctl@v2
+        with:
+          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+      - name: Log in to DO Container Registry
+        run: doctl registry login --expiry-seconds 600
+      - name: Tag image
+        run: docker tag chrona-app registry.digitalocean.com/chrona-registry/chrona:${{github.event.inputs.version }}
+      - name: Push image to DO Container Registry
+        run: docker push registry.digitalocean.com/chrona-registry/chrona:${{ github.event.inputs.version }}
