@@ -9,9 +9,6 @@ env:
   DO_REGISTRY: registry.digitalocean.com/chrona-registry
   GH_REGISTRY: ghcr.io/gustheprogrammer
   IMAGE_NAME: chrona-app
-  SMTP_SERVER: mail.privateemail.com
-  SMTP_PORT: 465
-  SMTP_USER: support@chrona.me
   NEXT_PUBLIC_API_URL: "https://chrona.me/api"
 
 jobs:
@@ -60,9 +57,6 @@ jobs:
 
       - name: Setup .env file
         run: |
-          echo SMTP_SERVER="${SMTP_SERVER}" >> .env
-          echo SMTP_PORT="${SMTP_PORT}" >> .env
-          echo SMTP_USER="${SMTP_USER}" >> .env
           echo NEXT_PUBLIC_API_URL="${NEXT_PUBLIC_API_URL}" >> .env
         shell: bash
 
