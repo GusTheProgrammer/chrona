@@ -2,6 +2,87 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma.db";
 import { isAuth } from "@/lib/auth";
 
+/**
+ * @swagger
+ * /api/time-off:
+ *   post:
+ *     tags:
+ *       - Time Off
+ *     summary: Submit a new time-off request
+ *     description: Allows a user to submit a request for time off. The request must not overlap with any existing approved or pending requests.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [startDate, endDate, shiftType]
+ *             properties:
+ *               startDate:
+ *                 type: string
+ *                 format: date
+ *                 description: The starting date of the time-off request.
+ *               endDate:
+ *                 type: string
+ *                 format: date
+ *                 description: The ending date of the time-off request.
+ *               shiftType:
+ *                 type: string
+ *                 description: The type of shift or reason for the time-off request.
+ *     responses:
+ *       201:
+ *         description: Time-off request created successfully.
+ *       400:
+ *         description: Input validation error, such as missing fields or invalid date ranges.
+ *       500:
+ *         description: Internal server error.
+ *
+ *   get:
+ *     tags:
+ *       - Time Off
+ *     summary: Retrieve time-off requests
+ *     description: Fetches time-off requests based on the role of the user making the request. Managers and Super Admins can view requests for their entire team, while other roles can only see their own requests.
+ *     responses:
+ *       200:
+ *         description: Time-off requests fetched successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: string
+ *                     description: The unique identifier of the time-off request.
+ *                   team:
+ *                     type: string
+ *                     description: The name of the team, if applicable.
+ *                   empName:
+ *                     type: string
+ *                     description: The name of the employee requesting time off.
+ *                   dateFrom:
+ *                     type: string
+ *                     format: date
+ *                     description: Start date of the time off.
+ *                   dateTo:
+ *                     type: string
+ *                     format: date
+ *                     description: End date of the time off.
+ *                   reason:
+ *                     type: string
+ *                     description: Reason for the time off.
+ *                   status:
+ *                     type: string
+ *                     description: The current status of the request (e.g., approved, pending, denied).
+ *       400:
+ *         description: User ID is missing or invalid.
+ *       404:
+ *         description: User not found.
+ *       500:
+ *         description: Internal server error.
+ */
+
 export async function POST(req: Request) {
   try {
     await isAuth(req);

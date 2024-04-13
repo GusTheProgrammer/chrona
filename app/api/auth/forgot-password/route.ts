@@ -5,6 +5,45 @@ import { NextResponse } from "next/server";
 import { getErrorResponse, getResetPasswordToken } from "@/lib/helpers";
 import { prisma } from "@/lib/prisma.db";
 
+/**
+ * @swagger
+ * /api/auth/forgot-password:
+ *   post:
+ *     tags:
+ *       - Auth
+ *     summary: Request a password reset link
+ *     description: This endpoint handles password reset requests. It sends an email with a password reset link to the user's registered email address if the user exists in the database.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [email]
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 description: The email address associated with the user account for which the password reset is requested.
+ *     responses:
+ *       200:
+ *         description: Email sent successfully with password reset instructions.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "An email has been sent to user@example.com with further instructions."
+ *       400:
+ *         description: Invalid input, such as missing or empty email field.
+ *       404:
+ *         description: No user found with the provided email address.
+ *       500:
+ *         description: Internal server error.
+ */
+
 export async function POST(req: NextApiRequestExtended) {
   try {
     const { email } = await req.json();
