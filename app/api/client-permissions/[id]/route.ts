@@ -102,7 +102,7 @@ export async function PUT(req: Request, { params }: Params) {
         },
       }));
     if (checkExistence)
-      return getErrorResponse("Client permission already exist");
+      return getErrorResponse("Client permission already exist", 409);
 
     await prisma.clientPermission.update({
       where: { id: params.id },

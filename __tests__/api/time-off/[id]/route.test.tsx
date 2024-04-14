@@ -11,7 +11,7 @@ jest.mock("@/lib/prisma.db", () => ({
     timeOff: {
       create: jest.fn(),
       findUnique: jest.fn(),
-      findMany: jest.fn(),
+      findMany: jest.fn(() => Promise.resolve([])), // Ensure it returns an empty array
       update: jest.fn(),
       delete: jest.fn(),
     },
