@@ -38,7 +38,6 @@ export const api = async (method: string, url: string, obj = { url }) => {
   const finalUrl = obj.url ? `${baseUrl}/${obj.url}` : `${baseUrl}/${url}`;
   // Ensure the dynamic URL isn't sent as part of the request payload
   const { url: _, ...payload } = obj;
-  console.log(`API called with method: ${method}, URL: ${baseUrl}/${url}`);
   try {
     switch (method) {
       case "GET":

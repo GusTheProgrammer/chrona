@@ -7,7 +7,7 @@ export async function POST(
   { params }: { params: { id: string } }
 ) {
   try {
-    // await isAuth(req);
+    await isAuth(req);
 
     const userId = req.headers.get("X-User-Id");
 
@@ -119,7 +119,7 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
-    // await isAuth(req);
+    await isAuth(req);
 
     const userId = req.headers.get("X-User-Id");
 
@@ -249,7 +249,7 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    // await isAuth(req);
+    await isAuth(req);
 
     const userId = req.headers.get("X-User-Id");
 
