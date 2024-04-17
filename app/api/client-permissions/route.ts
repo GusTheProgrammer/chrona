@@ -189,7 +189,7 @@ export async function POST(req: Request) {
         where: { path: path.toLowerCase() },
       }));
     if (checkExistence)
-      return getErrorResponse("Client permission already exist");
+      return getErrorResponse("Client permission already exists", 409);
 
     const clientPermissionObj = await prisma.clientPermission.create({
       data: {
