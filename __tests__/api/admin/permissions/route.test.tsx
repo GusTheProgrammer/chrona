@@ -55,28 +55,6 @@ describe("GET /api/permissions", () => {
     expect(body.data).toEqual([]);
     expect(body.total).toBe(0);
   });
-
-  //   it("should handle search and pagination parameters", async () => {
-  //     isAuth.mockResolvedValue(true);
-  //     prisma.permission.findMany.mockResolvedValue([]);
-  //     prisma.permission.count.mockResolvedValue(0);
-
-  //     const req = {
-  //       url: "http://example.com/api/permissions?q=test&page=2&limit=10",
-  //     };
-
-  //     const response = await GET(req);
-  //     const body = await response.json();
-
-  //     expect(prisma.permission.findMany).toHaveBeenCalledWith({
-  //       where: { name: { contains: "test", mode: "insensitive" } },
-  //       skip: 10,
-  //       take: 10,
-  //       orderBy: { createdAt: "desc" },
-  //     });
-  //     expect(body.page).toBe(2);
-  //     expect(body.limit).toBe(10);
-  //   });
 });
 
 describe("POST /api/permissions", () => {
