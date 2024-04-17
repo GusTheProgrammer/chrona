@@ -3,62 +3,6 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma.db";
 import { isAuth } from "@/lib/auth";
 
-/**
- * @swagger
- * /api/scheduler/{id}:
- *   put:
- *     tags:
- *       - Scheduler
- *     summary: Update a scheduler shift
- *     description: Updates shift details for a specified scheduler ID.
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         description: Unique identifier of the scheduler to update.
- *         schema:
- *           type: string
- *     requestBody:
- *       description: JSON object containing the shift details to be updated.
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               shift_name:
- *                 type: string
- *                 description: The new name of the shift.
- *               start_time:
- *                 type: string
- *                 format: date-time
- *                 description: The starting time of the shift in ISO format.
- *               end_time:
- *                 type: string
- *                 format: date-time
- *                 description: The ending time of the shift in ISO format.
- *               shift_color:
- *                 type: string
- *                 description: The color code (e.g., HEX) for the shift.
- *     responses:
- *       200:
- *         description: Successfully updated the shift details.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 updatedShift:
- *                   $ref: '#/components/schemas/Shift'
- *                 message:
- *                   type: string
- *       400:
- *         description: Validation error with input parameters or request body.
- *       404:
- *         description: No shift found for the given scheduler ID.
- *       500:
- *         description: Internal server error.
- */
 export async function PUT(
   req: Request,
   { params }: { params: { id: string } }
