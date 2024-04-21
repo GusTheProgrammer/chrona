@@ -172,7 +172,7 @@ export default function TimeoffForm({
                 id="date"
                 variant="outline"
                 className={cn(
-                  "w-[300px] justify-start text-left font-normal",
+                  "w-[300px] justify-start text-left font-normal my-2",
                   !date && "text-muted-foreground"
                 )}
               >
@@ -226,7 +226,9 @@ export default function TimeoffForm({
             </PopoverContent>
           </Popover>
           <DialogFooter>
-            <Button type="submit">Submit Request</Button>
+            <Button className="mt-2" type="submit">
+              Submit Request
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>
