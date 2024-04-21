@@ -128,9 +128,6 @@ const Page = () => {
       setSelectedShiftName(getWfmShifts.data[0]?.name || "");
     }
   }, [getApi?.data, getWfmShifts?.data]);
-  {
-    console.log("data", getApi?.data);
-  }
 
   return (
     <div>

@@ -59,7 +59,7 @@ export function DataTablePagination<TData>({
               <SelectValue placeholder={`${employeeLimit}`} />
             </SelectTrigger>
             <SelectContent side="top">
-              {[5, 10, 15, 20, 25].map((size) => (
+              {[1, 10, 15, 20, 25].map((size) => (
                 <SelectItem key={size} value={`${size}`}>
                   {size}
                 </SelectItem>

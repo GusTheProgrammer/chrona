@@ -30,7 +30,7 @@ import {
   DropdownMenuCheckboxItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { addDays, format } from "date-fns";
+import { differenceInCalendarDays, parse, format } from "date-fns";
 
 import { cn } from "@/lib/utils";
 import { Calendar } from "@/components/ui/calendar";
@@ -52,6 +52,8 @@ import { DataTablePagination } from "@/components/DataTablePagination";
 import SchedulerEditPopover from "@/components/SchedulerEditPopover";
 import { useState } from "react";
 import { DateRange } from "react-day-picker";
+import { RotateCcw } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface SchedulerProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -105,6 +107,7 @@ export function Scheduler<TData, TValue>({
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [date, setDate] = useState<DateRange | undefined>();
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
+  const queryClient = useQueryClient();
 
   const table = useReactTable({
     data,
@@ -130,19 +133,39 @@ export function Scheduler<TData, TValue>({
 
   const hasData = data && data.length > 0;
 
+  const handleReset = () => {
+    setPage("");
+    setLimit(7);
+    setEmployeeLimit(10);
+    setStartDate("");
+    setEndDate("");
+    setDate(undefined);
+    setSelectedShiftName("");
+    setIsPopoverOpen(false);
+    table.setColumnFilters([]);
+    table.setColumnVisibility({});
+    // Invalidate and refetch queries
+    queryClient.invalidateQueries({ queryKey: ["scheduler"] });
+  };
+
   return (
     <>
       <div className="flex items-center justify-between py-4">
-        <Input
-          placeholder="Filter by Name..."
-          value={
-            (table.getColumn("fullname")?.getFilterValue() as string) ?? ""
-          }
-          onChange={(event) =>
-            table.getColumn("fullname")?.setFilterValue(event.target.value)
-          }
-          className="max-w-sm"
-        />
+        <div className="flex items-center">
+          <Input
+            placeholder="Filter by Name..."
+            value={
+              (table.getColumn("fullname")?.getFilterValue() as string) ?? ""
+            }
+            onChange={(event) =>
+              table.getColumn("fullname")?.setFilterValue(event.target.value)
+            }
+            className="max-w-sm"
+          />
+          <Button variant="outline" className="mx-2" onClick={handleReset}>
+            <RotateCcw className="h-4 w-4" />
+          </Button>
+        </div>
         <div className="flex items-center space-x-4">
           <Popover>
             <PopoverTrigger className="mr-auto" asChild>
@@ -183,6 +206,15 @@ export function Scheduler<TData, TValue>({
                   const formattedTo = selectedRange?.to
                     ? format(selectedRange.to, "dd-MM-yyyy")
                     : "";
+                  if (selectedRange?.from && selectedRange?.to) {
+                    const daysBetween =
+                      differenceInCalendarDays(
+                        selectedRange.to,
+                        selectedRange.from
+                      ) + 1;
+                    setLimit(daysBetween);
+                    console.log("daysBetween", daysBetween);
+                  }
                   setStartDate(formattedFrom);
                   setEndDate(formattedTo);
                   setPage("");
