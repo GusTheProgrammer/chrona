@@ -7,6 +7,7 @@ import dynamic from "next/dynamic";
 import { useQueryClient } from "@tanstack/react-query";
 import { getColumns } from "./columns";
 import { start } from "repl";
+import { get } from "http";
 
 const Page = () => {
   const [wfmShifts, setWfmShifts] = useState([
@@ -39,6 +40,7 @@ const Page = () => {
   const [page, setPage] = useState("");
   const [totalPages, setTotalPages] = useState(0);
   const [limit, setLimit] = useState(7);
+  const [employeeLimit, setEmployeeLimit] = useState(10);
   const [columns, setColumns] = useState([]);
   const [data, setData] = useState([]);
   const [selectedShift, setSelectedShift] = useState(null);
@@ -58,9 +60,9 @@ const Page = () => {
   }).GET;
 
   const getApi = useApi({
-    key: ["scheduler", page, limit, startDate, endDate],
+    key: ["scheduler", page, limit, employeeLimit, startDate, endDate],
     method: "GET",
-    url: `scheduler?teamId=${teamId}&page=${page}&limit=${limit}&start=${startDate}&end=${endDate}`,
+    url: `scheduler?teamId=${teamId}&page=${page}&limit=${limit}&employeeLimit=${employeeLimit}&start=${startDate}&end=${endDate}`,
   })?.GET;
 
   const editSchedulerApi = useApi({
@@ -126,6 +128,9 @@ const Page = () => {
       setSelectedShiftName(getWfmShifts.data[0]?.name || "");
     }
   }, [getApi?.data, getWfmShifts?.data]);
+  {
+    console.log("data", getApi?.data);
+  }
 
   return (
     <div>
@@ -137,6 +142,8 @@ const Page = () => {
         totalPages={totalPages}
         limit={limit}
         setLimit={setLimit}
+        employeeLimit={employeeLimit}
+        setEmployeeLimit={setEmployeeLimit}
         wfmShifts={wfmShifts}
         isPopoverOpen={isPopoverOpen}
         setIsPopoverOpen={setIsPopoverOpen}

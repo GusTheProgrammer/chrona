@@ -72,6 +72,8 @@ interface SchedulerProps<TData, TValue> {
   setSelectedShiftName: (shiftName: string) => void;
   setStartDate: (date: Date | null) => void;
   setEndDate: (date: Date | null) => void;
+  employeeLimit: number;
+  setEmployeeLimit: (limit: number) => void;
 }
 
 export function Scheduler<TData, TValue>({
@@ -81,6 +83,8 @@ export function Scheduler<TData, TValue>({
   setPage,
   limit,
   setLimit,
+  employeeLimit,
+  setEmployeeLimit,
   totalPages,
   wfmShifts,
   isPopoverOpen,
@@ -340,6 +344,8 @@ export function Scheduler<TData, TValue>({
         table={table}
         setPage={setPage}
         setLimit={setLimit}
+        employeeLimit={employeeLimit}
+        setEmployeeLimit={setEmployeeLimit}
       />
       {/* Popover */}
       <SchedulerEditPopover

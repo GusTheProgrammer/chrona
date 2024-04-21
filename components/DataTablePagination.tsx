@@ -21,12 +21,16 @@ interface DataTablePaginationProps<TData> {
   table: Table<TData>;
   setPage: (page: string) => void;
   setLimit: (limit: number) => void;
+  employeeLimit?: number;
+  setEmployeeLimit?: (limit: number) => void;
 }
 
 export function DataTablePagination<TData>({
   table,
   setPage,
   setLimit,
+  employeeLimit,
+  setEmployeeLimit,
 }: DataTablePaginationProps<TData>) {
   const handleFirstPage = () => {
     setPage(1);
@@ -35,6 +39,7 @@ export function DataTablePagination<TData>({
   const handleLastPage = () => {
     setPage(table.getPageCount());
   };
+
   return (
     <div className="flex items-center justify-between px-2 mt-5">
       <div className="flex-1 text-sm text-muted-foreground">
@@ -45,18 +50,18 @@ export function DataTablePagination<TData>({
         <div className="flex items-center space-x-2">
           <p className="text-sm font-medium">Employees per page</p>
           <Select
-            value={`${table.getState().pagination.pageSize}`}
-            onValueChange={(value) => {
-              table.setPageSize(Number(value));
-            }}
+            value={`${employeeLimit}`}
+            onValueChange={(value) =>
+              setEmployeeLimit && setEmployeeLimit(parseInt(value))
+            }
           >
             <SelectTrigger className="h-8 w-[70px]">
-              <SelectValue placeholder={table.getState().pagination.pageSize} />
+              <SelectValue placeholder={`${employeeLimit}`} />
             </SelectTrigger>
             <SelectContent side="top">
-              {[5, 10, 15, 20, 25].map((pageSize) => (
-                <SelectItem key={pageSize} value={`${pageSize}`}>
-                  {pageSize}
+              {[5, 10, 15, 20, 25].map((size) => (
+                <SelectItem key={size} value={`${size}`}>
+                  {size}
                 </SelectItem>
               ))}
             </SelectContent>

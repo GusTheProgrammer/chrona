@@ -75,13 +75,21 @@ export async function GET(req: Request) {
     const secret = searchParams.get("secret");
     const option = searchParams.get("option");
     const employeeAndManagerPermissionIds = [
-      "QYfSl9RBJ02x5VxXiLR6K", // Upload
-      "dpC-jOpNCCp3otupfqHNe", // Scheduler (GET)
-      "DQBaydVZ9uGjNGwxWQfU6", // Update Scheduler (PUT)
-      "Q_5IQsDdbHohqQaqtRoEu", // Get Time-Off
-      "VJp79ZZmkKQQTHf_1cqX-", // Get Time-Off per user id
-      "KUVDwykdG-ckYvjbUWVS1", // Create a Time-Off request
-      "YDXrifyxUrbALiCc_4iZG", // Delete a Time-Off request
+      "QYfSl9RBJ02x5VxXiLR6K", // api/uploads | Upload
+      "Fyph8SxjGayAHr8g65Rie", // api/profile | Get user profile
+      "LMG211l6gxRRkjAHPvhgw", // api/profile/:id | Update user profile
+      "dpC-jOpNCCp3otupfqHNe", // api/scheduler | Scheduler (GET)
+      "DQBaydVZ9uGjNGwxWQfU6", // api/scheduler/:id | Scheduler (PUT)
+      "Q_5IQsDdbHohqQaqtRoEu", // api/scheduler | Get Time-Off requests
+      "VJp79ZZmkKQQTHf_1cqX-", // api/scheduler | Update a Time-Off request
+      "KUVDwykdG-ckYvjbUWVS1", // api/scheduler | Create a Time-Off request
+      "YDXrifyxUrbALiCc_4iZG", // api/scheduler | Delete a Time-Off request
+      "UzN2L6RQ_gUM0_JN4ALkB", // api/users/:id | Get user client permissions
+    ];
+    const employeeAndManagerPermissionIdsClient = [
+      "t-Snd86AW-TlIlMEDmYyt", // /account/profile | Profile page
+      "Cw2eO5qIMCD_tt6uUdQdr", // /time-off | Time-off page
+      "tEEdCt_Ghz5gWinY4RDNP", // /scheduler | Scheduler page
     ];
 
     if (!secret || secret !== "ts")
@@ -104,6 +112,7 @@ export async function GET(req: Request) {
 
     // Delete all existing data if option is reset
     if (option === "reset") {
+      await prisma.timeOff.deleteMany({});
       await prisma.scheduler.deleteMany({});
       await prisma.user.deleteMany({});
       await prisma.permission.deleteMany({});
@@ -215,6 +224,11 @@ export async function GET(req: Request) {
               permissions: {
                 connect: employeeAndManagerPermissionIds.map((id) => ({ id })),
               },
+              clientPermissions: {
+                connect: employeeAndManagerPermissionIdsClient.map((id) => ({
+                  id,
+                })),
+              },
             }),
           },
           create: {
@@ -230,6 +244,11 @@ export async function GET(req: Request) {
             ...(isEmployeeOrManager && {
               permissions: {
                 connect: employeeAndManagerPermissionIds.map((id) => ({ id })),
+              },
+              clientPermissions: {
+                connect: employeeAndManagerPermissionIdsClient.map((id) => ({
+                  id,
+                })),
               },
             }),
           },
