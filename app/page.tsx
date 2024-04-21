@@ -1,13 +1,17 @@
-import FormContainer from '@/components/FormContainer'
+import { About } from "@/components/About";
+import { FAQ } from "@/components/FAQ";
+import { Hero } from "@/components/Hero";
+import { Services } from "@/components/Services";
+import { ScrollToTop } from "@/components/ScrollToTop";
 
 export default function Home() {
   return (
-    <FormContainer title='Home'>
-      <h1 className='text-gray-500 text-center'>
-        <a href='/scheduler' target=''>
-          <strong> Scheduler</strong>
-        </a>
-      </h1>
-    </FormContainer>
-  )
+    <main>
+      <Hero />
+      <About />
+      <Services />
+      <FAQ />
+      <ScrollToTop />
+    </main>
+  );
 }

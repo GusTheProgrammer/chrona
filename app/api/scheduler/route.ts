@@ -9,6 +9,84 @@ function parseDate(dateStr: string): Date {
   return new Date(year, month - 1, day);
 }
 
+/**
+ * @swagger
+ * /api/scheduler:
+ *   get:
+ *     tags:
+ *       - Scheduler
+ *     summary: Fetch scheduler data for a specified team within a date range
+ *     description: Retrieves paginated schedule records for a specific team, filtered by a date range and optionally by page number. Returns detailed scheduling data including user names and their schedules on specific dates.
+ *     parameters:
+ *       - in: query
+ *         name: teamId
+ *         required: true
+ *         description: Unique identifier of the team.
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: limit
+ *         description: Number of records to return per page. Defaults to 7 if not specified.
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: page
+ *         description: Page number for pagination. If not specified, the current page is determined based on today's date within the date range.
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: start
+ *         description: Start date of the range in DD-MM-YYYY format. Defaults to 1970-01-01 if not specified.
+ *         schema:
+ *           type: string
+ *           format: date
+ *       - in: query
+ *         name: end
+ *         description: End date of the range in DD-MM-YYYY format. Defaults to 2999-12-31 if not specified.
+ *         schema:
+ *           type: string
+ *           format: date
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved the scheduler data.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 page:
+ *                   type: integer
+ *                 pageSize:
+ *                   type: integer
+ *                 count:
+ *                   type: integer
+ *                 totalDates:
+ *                   type: integer
+ *                 totalPages:
+ *                   type: integer
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       fullname:
+ *                         type: string
+ *                       schedule:
+ *                         type: object
+ *                         additionalProperties:
+ *                           $ref: '#/components/schemas/ScheduleRecord'
+ *                 columns:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       accessorKey:
+ *                         type: string
+ *       400:
+ *         description: Validation error with input parameters.
+ *       500:
+ *         description: Internal server error.
+ */
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);

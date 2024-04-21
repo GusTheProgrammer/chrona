@@ -2,6 +2,102 @@ import { generateToken, getErrorResponse, matchPassword } from "@/lib/helpers";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma.db";
 
+/**
+ * @swagger
+ * /api/auth/login:
+ *   post:
+ *     tags:
+ *       - Auth
+ *     summary: User login
+ *     description: Authenticates a user by their email and password. Returns user details, roles, and permissions if the credentials are valid. Also checks if the user is blocked or confirmed.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [email, password]
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 description: The user's email address.
+ *               password:
+ *                 type: string
+ *                 format: password
+ *                 description: The user's password.
+ *     responses:
+ *       200:
+ *         description: Login successful, user details and permissions returned.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: string
+ *                 name:
+ *                   type: string
+ *                 email:
+ *                   type: string
+ *                 teamId:
+ *                   type: string
+ *                 blocked:
+ *                   type: boolean
+ *                 confirmed:
+ *                   type: boolean
+ *                 image:
+ *                   type: string
+ *                 role:
+ *                   type: string
+ *                 routes:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       menu:
+ *                         type: string
+ *                       name:
+ *                         type: string
+ *                       path:
+ *                         type: string
+ *                       sort:
+ *                         type: number
+ *                 menu:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       name:
+ *                         type: string
+ *                       path:
+ *                         type: string
+ *                       open:
+ *                         type: boolean
+ *                       sort:
+ *                         type: number
+ *                       children:
+ *                         type: array
+ *                         items:
+ *                           type: object
+ *                           properties:
+ *                             name:
+ *                               type: string
+ *                             path:
+ *                               type: string
+ *                 token:
+ *                   type: string
+ *                 message:
+ *                   type: string
+ *       401:
+ *         description: Invalid email or password.
+ *       403:
+ *         description: User is either blocked or not confirmed.
+ *       404:
+ *         description: Role not found for the user.
+ *       500:
+ *         description: Internal server error.
+ */
 export async function POST(req: Request) {
   try {
     const { email, password } = await req.json();

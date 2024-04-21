@@ -1,9 +1,10 @@
 import Meta from "@/components/Meta";
 import "./globals.css";
+import "./index.css";
 import { Roboto } from "next/font/google";
-import Navigation from "@/components/Navigation";
+import Navigation from "@/components/layout/Navigation";
 import Providers from "@/lib/provider";
-import Footer from "@/components/Footer";
+import Footer from "@/components/layout/Footer";
 import Link from "next/link";
 import Image from "next/image";
 import profile from "@/public/img/profile.png";
@@ -34,20 +35,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <Providers>
-            <div className="navbar z-50 h-[68px] flex justify-between items-center px-5">
-              <div>
-                <Link href="/" className="w-24 normal-case text-xl">
-                  <Image
-                    src={profile}
-                    width={40}
-                    height={40}
-                    alt="logo"
-                    className="rounded"
-                  />
-                </Link>
-              </div>
-              <Navigation />
-            </div>
+            <Navigation />
             <div className="max-w-6xl mx-auto px-2">
               <main className="flex min-h-[85.5vh] flex-col">{children}</main>
               <Toaster position="bottom-left" />

@@ -11,6 +11,64 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma.db";
 import wfmShifts from "@/config/wfmShifts";
 
+/**
+ * @swagger
+ * /api/seeds:
+ *   get:
+ *     tags:
+ *       - Seeds
+ *     summary: Seed or reset the database
+ *     description: |
+ *       This endpoint manages seeding the database with initial data or resetting it based on provided options.
+ *       It performs various actions like creating or resetting users, roles, permissions, and other entities.
+ *       It requires a secret key to authorize the operation and accepts an option to reset data.
+ *     parameters:
+ *       - in: query
+ *         name: secret
+ *         required: true
+ *         description: Authorization key required to execute seeding operations.
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: option
+ *         required: false
+ *         description: Specify 'reset' to clear all existing data before seeding.
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Database has been seeded or reset successfully. Returns counts of created entities.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Database seeded successfully"
+ *                 team:
+ *                   type: integer
+ *                   description: Count of teams in the database.
+ *                 users:
+ *                   type: integer
+ *                   description: Count of users in the database.
+ *                 permissions:
+ *                   type: integer
+ *                   description: Count of permissions in the database.
+ *                 clientPermissions:
+ *                   type: integer
+ *                   description: Count of client permissions in the database.
+ *                 roles:
+ *                   type: integer
+ *                   description: Count of roles in the database.
+ *                 shiftTypes:
+ *                   type: integer
+ *                   description: Count of shift types in the database.
+ *       401:
+ *         description: Unauthorized access, invalid or missing secret key.
+ *       500:
+ *         description: Internal server error or specific errors related to seeding operations.
+ */
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
