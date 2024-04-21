@@ -67,7 +67,7 @@ export async function PUT(req: Request) {
       return getErrorResponse("User not found", 404);
     }
 
-    const updates = await req.json();
+    const { updates } = await req.json();
     if (!Array.isArray(updates)) {
       return getErrorResponse(
         "Invalid request body: expected an array of updates",

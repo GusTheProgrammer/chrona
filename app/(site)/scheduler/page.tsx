@@ -6,8 +6,7 @@ import { Scheduler } from "@/components/Scheduler";
 import dynamic from "next/dynamic";
 import { useQueryClient } from "@tanstack/react-query";
 import { getColumns } from "./columns";
-import { start } from "repl";
-import { get } from "http";
+import Message from "@/components/Message";
 
 const Page = () => {
   const [wfmShifts, setWfmShifts] = useState([
@@ -49,6 +48,7 @@ const Page = () => {
   const [selectedCell, setSelectedCell] = useState(null);
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [selectedRows, setSelectedRows] = useState([]);
   const teamId = JSON.parse(localStorage.getItem("userInfo")!).state.userInfo
     .teamId;
 
@@ -71,35 +71,64 @@ const Page = () => {
     url: "scheduler",
   })?.PUT;
 
-  const handleSubmit = async (e: {
-    preventDefault: () => void;
-    target: { start_time: { value: any }; end_time: { value: any } };
-  }) => {
+  const handleSubmit = async (e, batchUpdate = false) => {
     e.preventDefault();
 
-    const shift = wfmShifts.find((s) => s.name === selectedShiftName);
+    // Values from the form
+    const startTime = e.target.start_time.value;
+    const endTime = e.target.end_time.value;
+    const shiftName = selectedShiftName;
+    const shift = wfmShifts.find((s) => s.name === shiftName);
     const shiftColor = shift ? shift.color : null;
 
-    const updatedShiftData = {
-      shift_name: selectedShiftName,
-      start_time: e.target.start_time.value,
-      end_time: e.target.end_time.value,
-      shift_color: shiftColor,
-    };
+    if (batchUpdate && selectedRows.length > 0) {
+      const updates = selectedRows
+        .map((row) => {
+          return Object.keys(row)
+            .filter((key) => key.startsWith("20"))
+            .map((date) => {
+              const schedulerData = row[date];
+              return {
+                id: schedulerData.scheduler_id,
+                shift_name: shiftName,
+                start_time: startTime,
+                end_time: endTime,
+                shift_color: shiftColor,
+              };
+            });
+        })
+        .flat();
 
-    try {
-      await editSchedulerApi?.mutateAsync({
-        id: selectedShift.scheduler_id,
-        ...updatedShiftData,
-      });
+      console.log("Batch update data:", updates);
 
-      // Invalidate the queries to refetch the data
-      queryClient.invalidateQueries({ queryKey: ["scheduler", page] });
+      try {
+        await editSchedulerApi?.mutateAsync({
+          url: "scheduler/batch",
+          updates,
+        });
+        queryClient.invalidateQueries({ queryKey: ["scheduler", page] });
+        setIsPopoverOpen(false);
+      } catch (error) {
+        console.error("Error updating shifts in batch:", error);
+      }
+    } else {
+      const updatedShiftData = {
+        shift_name: shiftName,
+        start_time: startTime,
+        end_time: endTime,
+        shift_color: shiftColor,
+      };
 
-      // Close the popover/modal after successful submission
-      setIsPopoverOpen(false);
-    } catch (error) {
-      console.error("Error updating shift:", error);
+      try {
+        await editSchedulerApi?.mutateAsync({
+          id: selectedShift.scheduler_id,
+          ...updatedShiftData,
+        });
+        queryClient.invalidateQueries({ queryKey: ["scheduler", page] });
+        setIsPopoverOpen(false);
+      } catch (error) {
+        console.error("Error updating shift:", error);
+      }
     }
   };
 
@@ -131,6 +160,15 @@ const Page = () => {
 
   return (
     <div>
+      {getApi?.isLoading && <p>Loading...</p>}
+      {getApi?.isError && <Message value={getApi?.error} type="error" />}
+      {editSchedulerApi?.isError && (
+        <Message value={editSchedulerApi?.error} type="error" />
+      )}
+      {editSchedulerApi?.isSuccess && (
+        <Message value="Shift updated successfully" type="success" />
+      )}
+
       <Scheduler
         columns={columns}
         data={data}
@@ -150,6 +188,8 @@ const Page = () => {
         openPopover={openPopover}
         handleSubmit={handleSubmit}
         selectedCell={selectedCell}
+        selectedRows={selectedRows}
+        setSelectedRows={setSelectedRows}
         // Date range picker props
         setStartDate={setStartDate}
         setEndDate={setEndDate}

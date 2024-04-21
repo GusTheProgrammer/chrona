@@ -86,6 +86,8 @@ interface SchedulerProps<TData, TValue> {
   setEndDate: (date: Date | null) => void;
   employeeLimit: number;
   setEmployeeLimit: (limit: number) => void;
+  selectedRows: any[];
+  setSelectedRows: (rows: any[]) => void;
 }
 
 export function Scheduler<TData, TValue>({
@@ -107,6 +109,8 @@ export function Scheduler<TData, TValue>({
   selectedCell,
   selectedShiftName,
   setSelectedShiftName,
+  selectedRows,
+  setSelectedRows,
   // Date range picker props
   setStartDate,
   setEndDate,
@@ -118,6 +122,9 @@ export function Scheduler<TData, TValue>({
   const [date, setDate] = useState<DateRange | undefined>();
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   const queryClient = useQueryClient();
+
+  const [launchedFromUpdateButton, setLaunchedFromUpdateButton] =
+    useState(false);
 
   const table = useReactTable({
     data,
@@ -143,6 +150,15 @@ export function Scheduler<TData, TValue>({
 
   const hasData = data && data.length > 0;
 
+  const handleBatchUpdate = () => {
+    const selectedRows = table
+      .getFilteredSelectedRowModel()
+      .rows.map((row) => row.original);
+    setLaunchedFromUpdateButton(true);
+    setIsPopoverOpen(true);
+    setSelectedRows(selectedRows);
+  };
+
   const handleReset = () => {
     setPage("");
     setLimit(7);
@@ -157,8 +173,6 @@ export function Scheduler<TData, TValue>({
     // Invalidate and refetch queries
     queryClient.invalidateQueries({ queryKey: ["scheduler"] });
   };
-
-  console.log(table.getFilteredRowModel().rows);
 
   return (
     <>
@@ -249,10 +263,7 @@ export function Scheduler<TData, TValue>({
             </PopoverContent>
           </Popover>
           {table.getFilteredSelectedRowModel().rows.length > 0 ? (
-            <Button
-              variant="outline"
-              onClick={console.log("batch function should be called here")}
-            >
+            <Button variant="outline" onClick={handleBatchUpdate}>
               <Pencil className="mr-2 size-4" aria-hidden="true" />
               Update
             </Button>
@@ -446,6 +457,8 @@ export function Scheduler<TData, TValue>({
         setSelectedShiftName={setSelectedShiftName}
         selectedShift={selectedShift}
         position={selectedCell}
+        launchedFromUpdateButton={launchedFromUpdateButton}
+        selectedRows={selectedRows}
         shiftColor={
           wfmShifts.find(
             (shift: { name: any }) => shift.name === selectedShiftName
