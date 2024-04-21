@@ -23,11 +23,14 @@ import {
 } from "@/components/ui/table";
 
 import { CalendarIcon } from "@radix-ui/react-icons";
+import { MixerHorizontalIcon } from "@radix-ui/react-icons";
 
 import {
   DropdownMenu,
-  DropdownMenuContent,
   DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { differenceInCalendarDays, parse, format } from "date-fns";
@@ -44,6 +47,12 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -52,8 +61,9 @@ import { DataTablePagination } from "@/components/DataTablePagination";
 import SchedulerEditPopover from "@/components/SchedulerEditPopover";
 import { useState } from "react";
 import { DateRange } from "react-day-picker";
-import { RotateCcw } from "lucide-react";
+import { DownloadIcon, Pencil, RotateCcw } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
+import { exportTableToCSV } from "@/lib/export";
 
 interface SchedulerProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -148,6 +158,8 @@ export function Scheduler<TData, TValue>({
     queryClient.invalidateQueries({ queryKey: ["scheduler"] });
   };
 
+  console.log(table.getFilteredRowModel().rows);
+
   return (
     <>
       <div className="flex items-center justify-between py-4">
@@ -162,9 +174,22 @@ export function Scheduler<TData, TValue>({
             }
             className="max-w-sm"
           />
-          <Button variant="outline" className="mx-2" onClick={handleReset}>
-            <RotateCcw className="h-4 w-4" />
-          </Button>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="mx-2"
+                  onClick={handleReset}
+                >
+                  <RotateCcw className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Reset Table</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
         <div className="flex items-center space-x-4">
           <Popover>
@@ -223,16 +248,48 @@ export function Scheduler<TData, TValue>({
               />
             </PopoverContent>
           </Popover>
+          {table.getFilteredSelectedRowModel().rows.length > 0 ? (
+            <Button
+              variant="outline"
+              onClick={console.log("batch function should be called here")}
+            >
+              <Pencil className="mr-2 size-4" aria-hidden="true" />
+              Update
+            </Button>
+          ) : null}
+          <Button
+            variant="outline"
+            onClick={() =>
+              exportTableToCSV(table, {
+                filename: `scheduler-${new Date().toLocaleString()}`,
+                excludeColumns: ["select", "actions"],
+              })
+            }
+          >
+            <DownloadIcon className="mr-2 size-4" aria-hidden="true" />
+            Export
+          </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="ml-auto">
-                Columns
+              <Button
+                aria-label="Toggle columns"
+                variant="outline"
+                className="ml-auto lg:flex"
+              >
+                <MixerHorizontalIcon className="mr-2 size-4" />
+                View
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
+            <DropdownMenuContent align="end" className="w-40">
+              <DropdownMenuLabel>Toggle columns</DropdownMenuLabel>
+              <DropdownMenuSeparator />
               {table
                 .getAllColumns()
-                .filter((column) => column.getCanHide())
+                .filter(
+                  (column) =>
+                    typeof column.accessorFn !== "undefined" &&
+                    column.getCanHide()
+                )
                 .map((column) => {
                   return (
                     <DropdownMenuCheckboxItem
@@ -243,7 +300,7 @@ export function Scheduler<TData, TValue>({
                         column.toggleVisibility(!!value)
                       }
                     >
-                      {column.id}
+                      <span className="truncate">{column.id}</span>
                     </DropdownMenuCheckboxItem>
                   );
                 })}
