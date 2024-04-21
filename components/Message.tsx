@@ -11,22 +11,16 @@ const getToastStyle = (type: string) => {
   switch (type) {
     case "success":
       return {
-        backgroundColor: "green", // Example, replace with actual styling
-        color: "white",
-        // Add more styling as needed or className for predefined styles
+        color: "green",
       };
     case "error":
       return {
-        backgroundColor: "red",
-        color: "white",
-        // Add more styling as needed or className for predefined styles
+        color: "red",
       };
     case "info":
     default:
       return {
-        backgroundColor: "blue",
         color: "white",
-        // Add more styling as needed or className for predefined styles
       };
   }
 };
@@ -36,7 +30,6 @@ const Message = ({ value, type = "info" }: Props) => {
   const lastToast = useRef({ message: "", type: "" });
 
   useEffect(() => {
-    // Check if the current toast message and type are different from the last one
     if (
       value !== lastToast.current.message ||
       type !== lastToast.current.type

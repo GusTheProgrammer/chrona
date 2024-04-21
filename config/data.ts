@@ -1,3 +1,5 @@
+import { scheduler } from "timers/promises";
+
 const roles = [
   {
     id: "HzdmUa40IctkReRd2Pofm",
@@ -63,7 +65,9 @@ const profile = {
 const sort = {
   hidden: 0,
   profile: 1,
-  admin: 2,
+  scheduler: 2,
+  timeoff: 3,
+  admin: 4,
 };
 
 const clientPermissions = [
@@ -79,16 +83,16 @@ const clientPermissions = [
     id: "tEEdCt_Ghz5gWinY4RDNP",
     name: "Scheduler",
     path: "/scheduler",
-    menu: "hidden",
-    sort: sort.hidden,
+    menu: "scheduler",
+    sort: sort.scheduler,
     description: "Scheduler page",
   },
   {
     id: "Cw2eO5qIMCD_tt6uUdQdr",
     name: "Time-Off",
     path: "/time-off",
-    menu: "hidden",
-    sort: sort.hidden,
+    menu: "timeoff",
+    sort: sort.timeoff,
     description: "Time-Off page",
   },
   {
@@ -311,10 +315,10 @@ const permissions = [
   },
   {
     id: "VJp79ZZmkKQQTHf_1cqX-",
-    description: "Get Time-Off per user id",
+    description: "Update Time-Off per user id",
     route: "/api/time-off/:id",
     name: "Time-Off",
-    method: "GET",
+    method: "PUT",
   },
   {
     id: "KUVDwykdG-ckYvjbUWVS1",
