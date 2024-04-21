@@ -334,6 +334,13 @@ const permissions = [
     name: "Time-Off",
     method: "DELETE",
   },
+  {
+    id: "AkePMmg0cLhnzTYH2F09X",
+    description: "Approve Time-Off request",
+    route: "/api/time-off/:id",
+    name: "Time-Off",
+    method: "POST",
+  }
 ];
 
 export { roles, users, teams, profile, permissions, clientPermissions };

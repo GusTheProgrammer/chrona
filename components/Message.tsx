@@ -19,9 +19,7 @@ const getToastStyle = (type: string) => {
       };
     case "info":
     default:
-      return {
-        color: "white",
-      };
+      return {};
   }
 };
 

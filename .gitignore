@@ -53,3 +53,7 @@ migrations
 /prisma/migrations
 node_modules
 /.idea
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/

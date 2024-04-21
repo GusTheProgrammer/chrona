@@ -80,10 +80,11 @@ export async function GET(req: Request) {
       "LMG211l6gxRRkjAHPvhgw", // api/profile/:id | Update user profile
       "dpC-jOpNCCp3otupfqHNe", // api/scheduler | Scheduler (GET)
       "DQBaydVZ9uGjNGwxWQfU6", // api/scheduler/:id | Scheduler (PUT)
-      "Q_5IQsDdbHohqQaqtRoEu", // api/scheduler | Get Time-Off requests
-      "VJp79ZZmkKQQTHf_1cqX-", // api/scheduler | Update a Time-Off request
-      "KUVDwykdG-ckYvjbUWVS1", // api/scheduler | Create a Time-Off request
-      "YDXrifyxUrbALiCc_4iZG", // api/scheduler | Delete a Time-Off request
+      "Q_5IQsDdbHohqQaqtRoEu", // api/time-off | Get Time-Off requests
+      "VJp79ZZmkKQQTHf_1cqX-", // api/time-off | Update a Time-Off request
+      "KUVDwykdG-ckYvjbUWVS1", // api/time-off | Create a Time-Off request
+      "YDXrifyxUrbALiCc_4iZG", // api/time-off | Delete a Time-Off request
+      "AkePMmg0cLhnzTYH2F09X", // api/time-off | Approve a Time-Off request
       "UzN2L6RQ_gUM0_JN4ALkB", // api/users/:id | Get user client permissions
     ];
     const employeeAndManagerPermissionIdsClient = [
