@@ -11,6 +11,7 @@ import * as z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form } from "@/components/ui/form";
 import CustomFormField, { FormButton } from "@/components/ui/CustomForm";
+import Link from "next/link";
 
 const Page = () => {
   const router = useRouter();
@@ -70,6 +71,25 @@ const Page = () => {
           />
         </form>
       </Form>
+      <hr className="my-4" />
+      <div className="flex justify-between">
+        <Link
+          href="/auth/login"
+          className="text-yellow-500 hover:text-yellow-600"
+        >
+          Login
+        </Link>
+
+        <p>
+          Don't have an account? {""}
+          <Link
+            href="/auth/register"
+            className="text-yellow-500 hover:text-yellow-600"
+          >
+            Register
+          </Link>
+        </p>
+      </div>
     </FormContainer>
   );
 };

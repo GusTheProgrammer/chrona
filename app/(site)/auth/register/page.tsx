@@ -35,6 +35,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
+import Link from "next/link";
 
 const FormSchema = z.object({
   name: z.string(),
@@ -226,6 +227,25 @@ const Page = () => {
           />
         </form>
       </Form>
+      <hr className="my-4" />
+      <div className="flex justify-between">
+        <p>
+          Already have an account? {""}
+          <Link
+            href="/auth/login"
+            className="text-yellow-500 hover:text-yellow-600"
+          >
+            Login
+          </Link>
+        </p>
+
+        <Link
+          href="/auth/forgot-password"
+          className="text-yellow-500 hover:text-yellow-600"
+        >
+          Forgot Password?
+        </Link>
+      </div>
     </FormContainer>
   );
 };

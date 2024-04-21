@@ -18,17 +18,6 @@ const FormContainer: React.FC<Props> = ({ children, title, margin = "" }) => {
             </div>
           )}
           {children}
-
-          <div className="mt-10 space-y-3 text-center">
-            <hr />
-            <div>CONTACT</div>
-            <a
-              className="text-gray-500 underline font-light"
-              href="mailto:gus@chrona.me"
-            >
-              gus@chrona.me
-            </a>
-          </div>
         </div>
       </div>
     </div>

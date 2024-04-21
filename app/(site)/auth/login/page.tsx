@@ -80,7 +80,6 @@ const Page = () => {
   return (
     <FormContainer title="Sign In">
       {postApi?.isError && <Message value={postApi?.error} />}
-
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-2">
           <CustomFormField
@@ -104,16 +103,24 @@ const Page = () => {
           />
         </form>
       </Form>
+      <hr className="my-4" />
+      <div className="flex justify-between">
+        <Link
+          href="/auth/forgot-password"
+          className="text-yellow-500 hover:text-yellow-600"
+        >
+          Forgot Password?
+        </Link>
 
-      <div className="row pt-3">
-        <div className="col">
+        <p>
+          Don't have an account? {""}
           <Link
-            href="/auth/forgot-password"
-            className="ps-1 text-decoration-none"
+            href="/auth/register"
+            className="text-yellow-500 hover:text-yellow-600"
           >
-            Forgot Password?
+            Register
           </Link>
-        </div>
+        </p>
       </div>
     </FormContainer>
   );
