@@ -23,14 +23,17 @@ import {
 } from "@/components/ui/table";
 
 import { CalendarIcon } from "@radix-ui/react-icons";
+import { MixerHorizontalIcon } from "@radix-ui/react-icons";
 
 import {
   DropdownMenu,
-  DropdownMenuContent,
   DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { addDays, format } from "date-fns";
+import { differenceInCalendarDays, parse, format } from "date-fns";
 
 import { cn } from "@/lib/utils";
 import { Calendar } from "@/components/ui/calendar";
@@ -44,6 +47,12 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -52,6 +61,9 @@ import { DataTablePagination } from "@/components/DataTablePagination";
 import SchedulerEditPopover from "@/components/SchedulerEditPopover";
 import { useState } from "react";
 import { DateRange } from "react-day-picker";
+import { DownloadIcon, Pencil, RotateCcw } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { exportTableToCSV } from "@/lib/export";
 
 interface SchedulerProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -72,6 +84,10 @@ interface SchedulerProps<TData, TValue> {
   setSelectedShiftName: (shiftName: string) => void;
   setStartDate: (date: Date | null) => void;
   setEndDate: (date: Date | null) => void;
+  employeeLimit: number;
+  setEmployeeLimit: (limit: number) => void;
+  selectedRows: any[];
+  setSelectedRows: (rows: any[]) => void;
 }
 
 export function Scheduler<TData, TValue>({
@@ -81,6 +97,8 @@ export function Scheduler<TData, TValue>({
   setPage,
   limit,
   setLimit,
+  employeeLimit,
+  setEmployeeLimit,
   totalPages,
   wfmShifts,
   isPopoverOpen,
@@ -91,6 +109,8 @@ export function Scheduler<TData, TValue>({
   selectedCell,
   selectedShiftName,
   setSelectedShiftName,
+  selectedRows,
+  setSelectedRows,
   // Date range picker props
   setStartDate,
   setEndDate,
@@ -101,6 +121,10 @@ export function Scheduler<TData, TValue>({
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [date, setDate] = useState<DateRange | undefined>();
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
+  const queryClient = useQueryClient();
+
+  const [launchedFromUpdateButton, setLaunchedFromUpdateButton] =
+    useState(false);
 
   const table = useReactTable({
     data,
@@ -126,19 +150,61 @@ export function Scheduler<TData, TValue>({
 
   const hasData = data && data.length > 0;
 
+  const handleBatchUpdate = () => {
+    const selectedRows = table
+      .getFilteredSelectedRowModel()
+      .rows.map((row) => row.original);
+    setLaunchedFromUpdateButton(true);
+    setIsPopoverOpen(true);
+    setSelectedRows(selectedRows);
+  };
+
+  const handleReset = () => {
+    setPage("");
+    setLimit(7);
+    setEmployeeLimit(10);
+    setStartDate("");
+    setEndDate("");
+    setDate(undefined);
+    setSelectedShiftName("");
+    setIsPopoverOpen(false);
+    table.setColumnFilters([]);
+    table.setColumnVisibility({});
+    // Invalidate and refetch queries
+    queryClient.invalidateQueries({ queryKey: ["scheduler"] });
+  };
+
   return (
     <>
       <div className="flex items-center justify-between py-4">
-        <Input
-          placeholder="Filter by Name..."
-          value={
-            (table.getColumn("fullname")?.getFilterValue() as string) ?? ""
-          }
-          onChange={(event) =>
-            table.getColumn("fullname")?.setFilterValue(event.target.value)
-          }
-          className="max-w-sm"
-        />
+        <div className="flex items-center">
+          <Input
+            placeholder="Filter by Name..."
+            value={
+              (table.getColumn("fullname")?.getFilterValue() as string) ?? ""
+            }
+            onChange={(event) =>
+              table.getColumn("fullname")?.setFilterValue(event.target.value)
+            }
+            className="max-w-sm"
+          />
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="mx-2"
+                  onClick={handleReset}
+                >
+                  <RotateCcw className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Reset Table</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
         <div className="flex items-center space-x-4">
           <Popover>
             <PopoverTrigger className="mr-auto" asChild>
@@ -179,6 +245,15 @@ export function Scheduler<TData, TValue>({
                   const formattedTo = selectedRange?.to
                     ? format(selectedRange.to, "dd-MM-yyyy")
                     : "";
+                  if (selectedRange?.from && selectedRange?.to) {
+                    const daysBetween =
+                      differenceInCalendarDays(
+                        selectedRange.to,
+                        selectedRange.from
+                      ) + 1;
+                    setLimit(daysBetween);
+                    console.log("daysBetween", daysBetween);
+                  }
                   setStartDate(formattedFrom);
                   setEndDate(formattedTo);
                   setPage("");
@@ -187,16 +262,45 @@ export function Scheduler<TData, TValue>({
               />
             </PopoverContent>
           </Popover>
+          {table.getFilteredSelectedRowModel().rows.length > 0 ? (
+            <Button variant="outline" onClick={handleBatchUpdate}>
+              <Pencil className="mr-2 size-4" aria-hidden="true" />
+              Update
+            </Button>
+          ) : null}
+          <Button
+            variant="outline"
+            onClick={() =>
+              exportTableToCSV(table, {
+                filename: `scheduler-${new Date().toLocaleString()}`,
+                excludeColumns: ["select", "actions"],
+              })
+            }
+          >
+            <DownloadIcon className="mr-2 size-4" aria-hidden="true" />
+            Export
+          </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="ml-auto">
-                Columns
+              <Button
+                aria-label="Toggle columns"
+                variant="outline"
+                className="ml-auto lg:flex"
+              >
+                <MixerHorizontalIcon className="mr-2 size-4" />
+                View
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
+            <DropdownMenuContent align="end" className="w-40">
+              <DropdownMenuLabel>Toggle columns</DropdownMenuLabel>
+              <DropdownMenuSeparator />
               {table
                 .getAllColumns()
-                .filter((column) => column.getCanHide())
+                .filter(
+                  (column) =>
+                    typeof column.accessorFn !== "undefined" &&
+                    column.getCanHide()
+                )
                 .map((column) => {
                   return (
                     <DropdownMenuCheckboxItem
@@ -207,7 +311,7 @@ export function Scheduler<TData, TValue>({
                         column.toggleVisibility(!!value)
                       }
                     >
-                      {column.id}
+                      <span className="truncate">{column.id}</span>
                     </DropdownMenuCheckboxItem>
                   );
                 })}
@@ -340,6 +444,8 @@ export function Scheduler<TData, TValue>({
         table={table}
         setPage={setPage}
         setLimit={setLimit}
+        employeeLimit={employeeLimit}
+        setEmployeeLimit={setEmployeeLimit}
       />
       {/* Popover */}
       <SchedulerEditPopover
@@ -351,6 +457,8 @@ export function Scheduler<TData, TValue>({
         setSelectedShiftName={setSelectedShiftName}
         selectedShift={selectedShift}
         position={selectedCell}
+        launchedFromUpdateButton={launchedFromUpdateButton}
+        selectedRows={selectedRows}
         shiftColor={
           wfmShifts.find(
             (shift: { name: any }) => shift.name === selectedShiftName

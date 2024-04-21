@@ -3,12 +3,6 @@ import { getErrorResponse } from "@/lib/helpers";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma.db";
 
-// Helper function to parse dates in DD-MM-YYYY format
-function parseDate(dateStr: string): Date {
-  const [day, month, year] = dateStr.split("-").map(Number);
-  return new Date(year, month - 1, day);
-}
-
 /**
  * @swagger
  * /api/scheduler:
@@ -87,13 +81,27 @@ function parseDate(dateStr: string): Date {
  *       500:
  *         description: Internal server error.
  */
+
+// Helper function to parse dates in DD-MM-YYYY format
+function parseDate(dateStr: string): Date {
+  const [day, month, year] = dateStr.split("-").map(Number);
+  return new Date(year, month - 1, day);
+}
+
 export async function GET(req: Request) {
   try {
+    await isAuth(req);
+
     const { searchParams } = new URL(req.url);
     const teamId = searchParams.get("teamId");
     const pageSize = parseInt(searchParams.get("limit") as string) || 7;
+    const employeePageSize =
+      parseInt(searchParams.get("employeeLimit") as string) || 10;
     const pageParam = searchParams.get("page");
-    let page = parseInt(pageParam);
+    let page = parseInt(pageParam ?? "");
+    const employeePageParam = searchParams.get("employeePage");
+    let employeePage = parseInt(employeePageParam ?? "1");
+
     const startDateParam = searchParams.get("start");
     const endDateParam = searchParams.get("end");
     if (!teamId) {
@@ -107,12 +115,10 @@ export async function GET(req: Request) {
       ? parseDate(endDateParam)
       : new Date("2999-12-31");
 
-    // Validation: Ensure start date is before end date
     if (startDate > endDate) {
       return getErrorResponse("Start date must be before end date.", 400);
     }
 
-    // Fetch all records within the date range for the team
     const records = await prisma.schedulerCalendar.findMany({
       where: {
         team_id: teamId,
@@ -130,11 +136,10 @@ export async function GET(req: Request) {
       )
     ).sort();
 
-    // Determine the current page based on today's date within the filtered range, if page is not explicitly specified
     if (!pageParam) {
       const today = new Date().toISOString().split("T")[0];
       const currentIndex = allDates.indexOf(today);
-      page = currentIndex >= 0 ? Math.floor(currentIndex / pageSize) + 1 : 1; // Ensure page is at least 1
+      page = currentIndex >= 0 ? Math.floor(currentIndex / pageSize) + 1 : 1;
     }
 
     const startIndex = (page - 1) * pageSize;
@@ -156,7 +161,14 @@ export async function GET(req: Request) {
       }
     });
 
-    const paginatedData = Array.from(recordsMap.values());
+    const allEmployees = Array.from(recordsMap.values());
+    const totalEmployees = allEmployees.length;
+    const employeeStartIndex = (employeePage - 1) * employeePageSize;
+    const employeeEndIndex = employeeStartIndex + employeePageSize;
+    const paginatedEmployees = allEmployees.slice(
+      employeeStartIndex,
+      employeeEndIndex
+    );
 
     const columns = [
       { accessorKey: "fullname" },
@@ -166,10 +178,14 @@ export async function GET(req: Request) {
     return NextResponse.json({
       page,
       pageSize,
-      count: paginatedData.length,
+      employeePage,
+      employeePageSize,
+      count: paginatedEmployees.length,
       totalDates: allDates.length,
+      totalEmployees,
       totalPages: Math.ceil(allDates.length / pageSize),
-      data: paginatedData,
+      totalEmployeePages: Math.ceil(totalEmployees / employeePageSize),
+      data: paginatedEmployees,
       columns,
     });
   } catch ({ status = 500, message }: any) {

@@ -66,26 +66,53 @@ export async function PUT(
   try {
     await isAuth(req, params);
 
+    const userId = req.headers.get("X-User-Id");
     const schedulerId = params.id;
+
+    if (!userId) {
+      return getErrorResponse("User ID is required", 401);
+    }
 
     if (!schedulerId) {
       return getErrorResponse("Scheduler ID is required", 400);
     }
 
-    // Fetch the corresponding shift ID from the SchedulerCalendar view
+    // Fetch user and associated role
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      include: { role: true },
+    });
+
+    if (!user) {
+      return getErrorResponse("User not found", 404);
+    }
+
     const scheduler = await prisma.schedulerCalendar.findUnique({
       where: { scheduler_id: schedulerId },
     });
 
-    if (!scheduler || !scheduler.shift_id) {
+    if (!scheduler) {
       return getErrorResponse(
         "Shift not found for the given Scheduler ID",
         404
       );
     }
 
+    // Check if user is the owner of the shift or is a Manager/Super Admin
+    if (
+      scheduler.user_id !== userId &&
+      user.role.name !== "Manager" &&
+      user.role.name !== "Super Admin"
+    ) {
+      return getErrorResponse("Unauthorized to update this shift", 403);
+    }
+
     const body = await req.json();
     const { shift_name, start_time, end_time, shift_color } = body;
+
+    if (!scheduler.shift_id) {
+      return getErrorResponse("Shift ID is required", 400);
+    }
 
     // Update the shift record
     const updatedShift = await prisma.shift.update({
