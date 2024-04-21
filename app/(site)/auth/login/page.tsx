@@ -113,7 +113,7 @@ const Page = () => {
         </Link>
 
         <p>
-          Don't have an account? {""}
+          Don&apos;t have an account? {""}
           <Link
             href="/auth/register"
             className="text-yellow-500 hover:text-yellow-600"
