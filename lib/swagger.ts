@@ -26,7 +26,7 @@ export const getApiDocs = async () => {
       },
       servers: [
         {
-          url: "https://chrona.me/api",
+          url: "https://chrona.me",
           description: "Production server (uses live data)",
         },
       ],
