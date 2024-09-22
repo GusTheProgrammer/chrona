@@ -4,7 +4,7 @@
 import { GET } from "@/app/api/profile/route";
 import { prisma } from "@/lib/prisma.db";
 import { isAuth } from "@/lib/auth";
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 
 jest.mock("@/lib/auth", () => ({
   isAuth: jest.fn(),
@@ -15,15 +15,6 @@ jest.mock("@/lib/prisma.db", () => ({
     user: {
       findUnique: jest.fn(),
     },
-  },
-}));
-
-jest.mock("next/server", () => ({
-  NextResponse: {
-    json: jest.fn((data) => ({
-      json: () => Promise.resolve(data),
-      status: 200,
-    })),
   },
 }));
 
@@ -43,16 +34,17 @@ describe("GET /api/profile", () => {
       address: "1234 Some Street",
     };
 
-    isAuth.mockImplementation(async (req) => {
+    (isAuth as jest.Mock).mockImplementation(async (req: any) => {
       req.user = { id: "1" };
     });
-    prisma.user.findUnique.mockResolvedValue(fakeUser);
+    (prisma.user.findUnique as jest.Mock).mockResolvedValue(fakeUser);
 
     const req = {
       user: {
         id: "1",
       },
-    };
+      query: {},
+    } as unknown as NextApiRequestExtended;
 
     const response = await GET(req);
     const body = await response.json();
@@ -75,10 +67,10 @@ describe("GET /api/profile", () => {
   });
 
   it("should handle errors when fetching user profile", async () => {
-    isAuth.mockImplementation(async (req) => {
+    (isAuth as jest.Mock).mockImplementation(async (req: any) => {
       req.user = { id: "1" };
     });
-    prisma.user.findUnique.mockRejectedValue(
+    (prisma.user.findUnique as jest.Mock).mockRejectedValue(
       new Error("Internal server error")
     );
 
@@ -86,7 +78,8 @@ describe("GET /api/profile", () => {
       user: {
         id: "1",
       },
-    };
+      query: {},
+    } as unknown as NextApiRequestExtended;
 
     const response = await GET(req);
     const body = await response.json();

@@ -5,7 +5,7 @@ import { PUT } from "@/app/api/profile/[id]/route";
 import { prisma } from "@/lib/prisma.db";
 import { isAuth } from "@/lib/auth";
 import { encryptPassword, getErrorResponse } from "@/lib/helpers";
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 
 jest.mock("@/lib/auth", () => ({
   isAuth: jest.fn(),
@@ -23,17 +23,8 @@ jest.mock("@/lib/prisma.db", () => ({
 jest.mock("@/lib/helpers", () => ({
   encryptPassword: jest.fn(),
   getErrorResponse: jest.fn().mockImplementation((message, status) => {
-    return { error: message, status };
+    return NextResponse.json({ error: message }, { status });
   }),
-}));
-
-jest.mock("next/server", () => ({
-  NextResponse: {
-    json: jest.fn().mockImplementation((data) => ({
-      json: () => Promise.resolve(data),
-      status: 200,
-    })),
-  },
 }));
 
 describe("PUT /api/profile/{id}", () => {
@@ -60,22 +51,25 @@ describe("PUT /api/profile/{id}", () => {
       image: "http://example.com/new-image.jpg",
     };
 
-    isAuth.mockResolvedValue(true);
-    prisma.user.findUnique.mockResolvedValue(fakeUser);
-    prisma.user.update.mockResolvedValue({
+    (isAuth as jest.Mock).mockResolvedValue(true);
+    (prisma.user.findUnique as jest.Mock).mockResolvedValue(fakeUser);
+    (prisma.user.update as jest.Mock).mockResolvedValue({
       ...fakeUser,
       ...updatedData,
     });
 
-    const req = {
-      json: async () => ({
+    const req = new Request("http://localhost/api/profile/1", {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
         ...updatedData,
         password: "NewValidPassword1!",
       }),
-      params: { id: "1" },
-    };
+    });
 
-    encryptPassword.mockResolvedValue("encryptedPassword");
+    (encryptPassword as jest.Mock).mockResolvedValue("encryptedPassword");
 
     const response = await PUT(req, { params: { id: "1" } });
     const body = await response.json();
@@ -100,35 +94,41 @@ describe("PUT /api/profile/{id}", () => {
   });
 
   it("should return an error if the user does not exist", async () => {
-    isAuth.mockResolvedValue(true);
-    prisma.user.findUnique.mockResolvedValue(null);
+    (isAuth as jest.Mock).mockResolvedValue(true);
+    (prisma.user.findUnique as jest.Mock).mockResolvedValue(null);
 
-    const req = {
-      json: async () => ({ name: "Jane Doe" }),
-      params: { id: "1" },
-    };
+    const req = new Request("http://localhost/api/profile/1", {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ name: "Jane Doe" }),
+    });
 
     const response = await PUT(req, { params: { id: "1" } });
 
     expect(response.status).toBe(404);
-    expect(response.error).toEqual("User profile not found");
+    const body = await response.json();
+    expect(body.error).toEqual("User profile not found");
   });
 
   it("should handle password validation error", async () => {
-    isAuth.mockResolvedValue(true);
-    prisma.user.findUnique.mockResolvedValue({ id: "1" });
+    (isAuth as jest.Mock).mockResolvedValue(true);
+    (prisma.user.findUnique as jest.Mock).mockResolvedValue({ id: "1" });
 
-    const req = {
-      json: async () => ({
-        password: "short",
-      }),
-      params: { id: "1" },
-    };
+    const req = new Request("http://localhost/api/profile/1", {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ password: "short" }),
+    });
 
     const response = await PUT(req, { params: { id: "1" } });
 
     expect(response.status).toBe(400);
-    expect(response.error).toEqual(
+    const body = await response.json();
+    expect(body.error).toEqual(
       "Password must be at least 8 characters long and contain at least one lowercase letter, one uppercase letter, one number and one special character"
     );
   });

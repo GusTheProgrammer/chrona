@@ -4,7 +4,7 @@
 import { GET, POST } from "@/app/api/permissions/route";
 import { prisma } from "@/lib/prisma.db";
 import { isAuth } from "@/lib/auth";
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 
 jest.mock("@/lib/auth", () => ({
   isAuth: jest.fn(),
@@ -21,28 +21,19 @@ jest.mock("@/lib/prisma.db", () => ({
   },
 }));
 
-jest.mock("next/server", () => ({
-  NextResponse: {
-    json: jest.fn((data) => ({
-      json: () => Promise.resolve(data),
-      status: 200,
-    })),
-  },
-}));
-
 describe("GET /api/permissions", () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
   it("should fetch permissions with default pagination", async () => {
-    isAuth.mockResolvedValue(true);
-    prisma.permission.findMany.mockResolvedValue([]);
-    prisma.permission.count.mockResolvedValue(0);
+    (isAuth as jest.Mock).mockResolvedValue(true);
+    (prisma.permission.findMany as jest.Mock).mockResolvedValue([]);
+    (prisma.permission.count as jest.Mock).mockResolvedValue(0);
 
-    const req = { url: "http://example.com/api/permissions" };
+    const req = new Request("http://example.com/api/permissions");
 
-    const response = await GET(req);
+    const response = await GET(req as unknown as NextRequest);
     const body = await response.json();
 
     expect(isAuth).toHaveBeenCalled();
@@ -59,9 +50,9 @@ describe("GET /api/permissions", () => {
 
 describe("POST /api/permissions", () => {
   it("should create a new permission", async () => {
-    isAuth.mockResolvedValue(true);
-    prisma.permission.findFirst.mockResolvedValue(null);
-    prisma.permission.create.mockResolvedValue({
+    (isAuth as jest.Mock).mockResolvedValue(true);
+    (prisma.permission.findFirst as jest.Mock).mockResolvedValue(null);
+    (prisma.permission.create as jest.Mock).mockResolvedValue({
       id: "1",
       name: "New Permission",
       method: "GET",
@@ -76,7 +67,7 @@ describe("POST /api/permissions", () => {
         route: "/new-permission",
         description: "A new test permission",
       }),
-    };
+    } as unknown as NextRequest;
 
     const response = await POST(req);
     const body = await response.json();
@@ -86,8 +77,8 @@ describe("POST /api/permissions", () => {
   });
 
   it("should prevent creating a permission with a duplicate route and method", async () => {
-    isAuth.mockResolvedValue(true);
-    prisma.permission.findFirst.mockResolvedValue({
+    (isAuth as jest.Mock).mockResolvedValue(true);
+    (prisma.permission.findFirst as jest.Mock).mockResolvedValue({
       id: "1",
       name: "Existing Permission",
       method: "GET",
@@ -102,7 +93,7 @@ describe("POST /api/permissions", () => {
         route: "/new-permission",
         description: "A new test permission",
       }),
-    };
+    } as unknown as NextRequest;
 
     const response = await POST(req);
     const body = await response.json();

@@ -3,7 +3,7 @@
  */
 import { GET } from "@/app/api/teams/route";
 import { prisma } from "@/lib/prisma.db"; // Ensure this path matches your actual import
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 
 // Mock the prisma client
 jest.mock("@/lib/prisma.db", () => ({
@@ -14,24 +14,15 @@ jest.mock("@/lib/prisma.db", () => ({
   },
 }));
 
-// Mock NextResponse
-jest.mock("next/server", () => ({
-  NextResponse: {
-    json: jest.fn().mockImplementation((data, options) => ({
-      json: () => Promise.resolve(data),
-      status: options.status,
-    })),
-  },
-}));
-
 describe("GET /api/teams", () => {
   it("should return 200 and a list of teams", async () => {
     const mockTeams = [
       { id: "1", name: "Team A", description: "A great team" },
     ];
-    prisma.team.findMany.mockResolvedValue(mockTeams);
+    (prisma.team.findMany as jest.Mock).mockResolvedValue(mockTeams);
 
-    const response = await GET();
+    const req = {} as NextRequest;
+    const response = await GET(req);
     const body = await response.json();
 
     expect(response.status).toBe(200);
@@ -39,9 +30,10 @@ describe("GET /api/teams", () => {
   });
 
   it("should return 404 when no teams are found", async () => {
-    prisma.team.findMany.mockResolvedValue([]);
+    (prisma.team.findMany as jest.Mock).mockResolvedValue([]);
 
-    const response = await GET();
+    const req = {} as NextRequest;
+    const response = await GET(req);
     const body = await response.json();
 
     expect(response.status).toBe(404);
@@ -49,9 +41,10 @@ describe("GET /api/teams", () => {
   });
 
   it("should return 500 on server error", async () => {
-    prisma.team.findMany.mockRejectedValue(new Error("Internal server error"));
+    (prisma.team.findMany as jest.Mock).mockRejectedValue(new Error("Internal server error"));
 
-    const response = await GET();
+    const req = {} as NextRequest;
+    const response = await GET(req);
     const body = await response.json();
 
     expect(response.status).toBe(500);

@@ -4,7 +4,7 @@
 import { POST, GET } from "@/app/api/time-off/route";
 import { prisma } from "@/lib/prisma.db";
 import { isAuth } from "@/lib/auth";
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 
 // Mocks
 jest.mock("@/lib/prisma.db", () => ({
@@ -23,21 +23,12 @@ jest.mock("@/lib/auth", () => ({
   isAuth: jest.fn(),
 }));
 
-jest.mock("next/server", () => ({
-  NextResponse: {
-    json: jest.fn().mockImplementation((data, options) => ({
-      json: () => Promise.resolve(data),
-      status: options.status,
-    })),
-  },
-}));
-
 // Tests
 describe("POST /api/time-off", () => {
   it("should create a time-off request successfully", async () => {
-    isAuth.mockResolvedValue(true);
-    prisma.timeOff.findMany.mockResolvedValue([]);
-    prisma.timeOff.create.mockResolvedValue({
+    (isAuth as jest.Mock).mockResolvedValue(true);
+    (prisma.timeOff.findMany as jest.Mock).mockResolvedValue([]);
+    (prisma.timeOff.create as jest.Mock).mockResolvedValue({
       id: "123",
       userId: "u123",
       startDate: new Date("2024-12-25"),
@@ -52,9 +43,9 @@ describe("POST /api/time-off", () => {
         endDate: "2024-12-30",
         shiftType: "Holiday",
       }),
-    };
+    } as unknown as NextRequest;
 
-    const response = await POST(req as any);
+    const response = await POST(req);
     const body = await response.json();
 
     expect(response.status).toBe(201);
@@ -62,8 +53,8 @@ describe("POST /api/time-off", () => {
   });
 
   it("should return error when dates clash with existing requests", async () => {
-    isAuth.mockResolvedValue(true);
-    prisma.timeOff.findMany.mockResolvedValue([
+    (isAuth as jest.Mock).mockResolvedValue(true);
+    (prisma.timeOff.findMany as jest.Mock).mockResolvedValue([
       {
         startDate: new Date("2024-12-24"),
         endDate: new Date("2024-12-26"),
@@ -78,9 +69,9 @@ describe("POST /api/time-off", () => {
         endDate: "2024-12-30",
         shiftType: "Holiday",
       }),
-    };
+    } as unknown as NextRequest;
 
-    const response = await POST(req as any);
+    const response = await POST(req);
     const body = await response.json();
 
     expect(response.status).toBe(400);
@@ -90,7 +81,7 @@ describe("POST /api/time-off", () => {
   });
 
   it("should return error if the start date is in the past", async () => {
-    isAuth.mockResolvedValue(true);
+    (isAuth as jest.Mock).mockResolvedValue(true);
     const pastDate = new Date();
     pastDate.setDate(pastDate.getDate() - 1);
 
@@ -101,9 +92,9 @@ describe("POST /api/time-off", () => {
         endDate: "2024-12-30",
         shiftType: "Holiday",
       }),
-    };
+    } as unknown as NextRequest;
 
-    const response = await POST(req as any);
+    const response = await POST(req);
     const body = await response.json();
 
     expect(response.status).toBe(400);
@@ -113,14 +104,14 @@ describe("POST /api/time-off", () => {
 
 describe("GET /api/time-off", () => {
   it("should fetch time-off requests for a regular user", async () => {
-    isAuth.mockResolvedValue(true);
-    prisma.user.findUnique.mockResolvedValue({
+    (isAuth as jest.Mock).mockResolvedValue(true);
+    (prisma.user.findUnique as jest.Mock).mockResolvedValue({
       id: "u123",
       name: "John Doe",
       role: { name: "Employee" },
       teamId: "t123",
     });
-    prisma.timeOff.findMany.mockResolvedValue([
+    (prisma.timeOff.findMany as jest.Mock).mockResolvedValue([
       {
         id: "req1",
         user: {
@@ -136,9 +127,9 @@ describe("GET /api/time-off", () => {
 
     const req = {
       headers: new Map([["X-User-Id", "u123"]]),
-    };
+    } as unknown as NextRequest;
 
-    const response = await GET(req as any);
+    const response = await GET(req);
     const body = await response.json();
 
     expect(response.status).toBe(200);
@@ -156,14 +147,14 @@ describe("GET /api/time-off", () => {
   });
 
   it("should fetch time-off requests for the whole team when the user is a manager", async () => {
-    isAuth.mockResolvedValue(true);
-    prisma.user.findUnique.mockResolvedValue({
+    (isAuth as jest.Mock).mockResolvedValue(true);
+    (prisma.user.findUnique as jest.Mock).mockResolvedValue({
       id: "u123",
       name: "Jane Manager",
       role: { name: "Manager" },
       teamId: "t123",
     });
-    prisma.timeOff.findMany.mockResolvedValue([
+    (prisma.timeOff.findMany as jest.Mock).mockResolvedValue([
       {
         id: "req1",
         user: {
@@ -190,9 +181,9 @@ describe("GET /api/time-off", () => {
 
     const req = {
       headers: new Map([["X-User-Id", "u123"]]),
-    };
+    } as unknown as NextRequest;
 
-    const response = await GET(req as any);
+    const response = await GET(req);
     const body = await response.json();
 
     expect(response.status).toBe(200);

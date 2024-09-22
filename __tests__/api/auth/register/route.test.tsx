@@ -4,7 +4,7 @@
 import { POST } from "@/app/api/auth/register/route";
 import { prisma } from "@/lib/prisma.db";
 import { encryptPassword, getErrorResponse } from "@/lib/helpers";
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 
 // Mocks
 jest.mock("@/lib/prisma.db", () => ({
@@ -26,15 +26,6 @@ jest.mock("@/lib/helpers", () => ({
   }),
 }));
 
-jest.mock("next/server", () => ({
-  NextResponse: {
-    json: jest.fn().mockImplementation((data, options) => ({
-      json: () => Promise.resolve(data),
-      status: options.status,
-    })),
-  },
-}));
-
 describe("POST /api/auth/register", () => {
   it("should return an error when passwords do not match", async () => {
     const req = {
@@ -46,7 +37,7 @@ describe("POST /api/auth/register", () => {
         isManager: false,
         teamId: "team1",
       }),
-    };
+    } as unknown as NextRequest;
 
     const response = await POST(req);
     const body = await response.json();
@@ -56,7 +47,7 @@ describe("POST /api/auth/register", () => {
   });
 
   it("should return an error if the user already exists", async () => {
-    prisma.user.findFirst.mockResolvedValueOnce({ email: "john@example.com" });
+    (prisma.user.findFirst as jest.Mock).mockResolvedValueOnce({ email: "john@example.com" });
 
     const req = {
       json: async () => ({
@@ -67,7 +58,7 @@ describe("POST /api/auth/register", () => {
         isManager: false,
         teamId: "team1",
       }),
-    };
+    } as unknown as NextRequest;
 
     const response = await POST(req);
     const body = await response.json();
@@ -77,9 +68,9 @@ describe("POST /api/auth/register", () => {
   });
 
   it("should successfully create a user", async () => {
-    prisma.user.findFirst.mockResolvedValueOnce(null);
-    prisma.role.findFirst.mockResolvedValueOnce({ id: "role1" });
-    encryptPassword.mockResolvedValue("encryptedPassword");
+    (prisma.user.findFirst as jest.Mock).mockResolvedValueOnce(null);
+    (prisma.role.findFirst as jest.Mock).mockResolvedValueOnce({ id: "role1" });
+    (encryptPassword as jest.Mock).mockResolvedValue("encryptedPassword");
 
     const req = {
       json: async () => ({
@@ -90,9 +81,9 @@ describe("POST /api/auth/register", () => {
         isManager: true,
         teamId: "team1",
       }),
-    };
+    } as unknown as NextRequest;
 
-    prisma.user.create.mockResolvedValueOnce({
+    (prisma.user.create as jest.Mock).mockResolvedValueOnce({
       id: "user1",
       name: "Jane Doe",
       email: "jane@example.com",
