@@ -15,24 +15,39 @@ jobs:
     if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     outputs:
-      new_version: ${{ steps.semver.outputs.minor }}
+      new_version: ${{ steps.semver.outputs.new_version }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
         with:
-          fetch-depth: 0  # Required to fetch tags
+          fetch-depth: 0  # Required to fetch all tags
+
+      - name: Fetch all tags
+        run: git fetch --tags
 
       - name: Get previous tag
         id: previoustag
-        uses: WyriHaximus/github-action-get-previous-tag@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG=$(git describe --tags $(git rev-list --tags --max-count=1))
+          if [ -z "$TAG" ]; then
+            TAG="0.0.0"
+          fi
+          echo "Previous tag: $TAG"
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
 
       - name: Get next minor version
         id: semver
-        uses: WyriHaximus/github-action-next-semvers@v1
-        with:
-          version: ${{ steps.previoustag.outputs.tag }}
+        run: |
+          npm install -g semver
+          NEW_VERSION=$(semver -i minor "${{ steps.previoustag.outputs.tag }}")
+          echo "New version: $NEW_VERSION"
+          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Output versions for debugging
+        run: |
+          echo "Previous tag: ${{ steps.previoustag.outputs.tag }}"
+          echo "New version: ${{ steps.semver.outputs.new_version }}"
+
 
   test:
     if: github.event.pull_request.merged == true
@@ -77,13 +92,7 @@ jobs:
         run: |
           docker build -t ${{ env.IMAGE_NAME }}:${{ needs.prepare_release.outputs.new_version }} .
           docker tag ${{ env.IMAGE_NAME }}:${{ needs.prepare_release.outputs.new_version }} ${{ env.GH_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.prepare_release.outputs.new_version }}
-
-      - name: Push image to GitHub Container Registry
-        run: |
-          docker push ${{ env.GH_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.prepare_release.outputs.new_version }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
+        
       - name: Create release
         uses: actions/github-script@v6
         with:
@@ -95,5 +104,4 @@ jobs:
               name: 'Release ${{ needs.prepare_release.outputs.new_version }}',
               body: 'Docker Image: ${{ env.GH_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.prepare_release.outputs.new_version }}'
             });
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        
