@@ -28,7 +28,7 @@ jobs:
       - name: Get previous tag
         id: previoustag
         run: |
-          TAG=$(git describe --tags $(git rev-list --tags --max-count=1))
+          TAG=$(git tag --sort=-v:refname | head -n1)
           if [ -z "$TAG" ]; then
             TAG="0.0.0"
           fi
@@ -37,17 +37,21 @@ jobs:
 
       - name: Get next minor version
         id: semver
+        env:
+          PREVIOUS_TAG: ${{ steps.previoustag.outputs.tag }}
         run: |
           npm install -g semver
-          NEW_VERSION=$(semver -i minor "${{ steps.previoustag.outputs.tag }}")
+          NEW_VERSION=$(semver -i minor "$PREVIOUS_TAG")
           echo "New version: $NEW_VERSION"
           echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
 
       - name: Output versions for debugging
+        env:
+          PREVIOUS_TAG: ${{ steps.previoustag.outputs.tag }}
+          NEW_VERSION: ${{ steps.semver.outputs.new_version }}
         run: |
-          echo "Previous tag: ${{ steps.previoustag.outputs.tag }}"
-          echo "New version: ${{ steps.semver.outputs.new_version }}"
-
+          echo "Previous tag: $PREVIOUS_TAG"
+          echo "New version: $NEW_VERSION"
 
   test:
     if: github.event.pull_request.merged == true
@@ -92,7 +96,13 @@ jobs:
         run: |
           docker build -t ${{ env.IMAGE_NAME }}:${{ needs.prepare_release.outputs.new_version }} .
           docker tag ${{ env.IMAGE_NAME }}:${{ needs.prepare_release.outputs.new_version }} ${{ env.GH_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.prepare_release.outputs.new_version }}
-        
+
+      - name: Push image to GitHub Container Registry
+        run: |
+          docker push ${{ env.GH_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.prepare_release.outputs.new_version }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Create release
         uses: actions/github-script@v6
         with:
@@ -104,4 +114,3 @@ jobs:
               name: 'Release ${{ needs.prepare_release.outputs.new_version }}',
               body: 'Docker Image: ${{ env.GH_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.prepare_release.outputs.new_version }}'
             });
-        
