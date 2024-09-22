@@ -4,7 +4,7 @@
 import { POST, PUT, DELETE } from "@/app/api/time-off/[id]/route";
 import { prisma } from "@/lib/prisma.db";
 import { isAuth } from "@/lib/auth";
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 
 jest.mock("@/lib/prisma.db", () => ({
   prisma: {
@@ -34,30 +34,21 @@ jest.mock("@/lib/auth", () => ({
   isAuth: jest.fn(),
 }));
 
-jest.mock("next/server", () => ({
-  NextResponse: {
-    json: jest.fn((data, options) => ({
-      json: () => Promise.resolve(data),
-      status: options.status,
-    })),
-  },
-}));
-
 describe("POST /api/time-off/{id}", () => {
   it("should successfully approve a time-off request and update shift details", async () => {
     // Setup mocks and request object
-    isAuth.mockResolvedValueOnce(true);
+    (isAuth as jest.Mock).mockResolvedValueOnce(true);
     const req = {
       headers: new Map([["X-User-Id", "manager1"]]),
       json: async () => ({ isApproved: true }),
-    };
+    } as unknown as NextRequest;
 
-    prisma.user.findUnique.mockResolvedValueOnce({
+    (prisma.user.findUnique as jest.Mock).mockResolvedValueOnce({
       id: "manager1",
       role: { name: "Manager" },
     });
 
-    prisma.timeOff.findUnique.mockResolvedValueOnce({
+    (prisma.timeOff.findUnique as jest.Mock).mockResolvedValueOnce({
       id: "timeOff1",
       userId: "user1",
       reason: "Vacation",
@@ -65,17 +56,17 @@ describe("POST /api/time-off/{id}", () => {
       endDate: new Date("2024-12-25"),
     });
 
-    prisma.shiftType.findMany.mockResolvedValueOnce([
+    (prisma.shiftType.findMany as jest.Mock).mockResolvedValueOnce([
       { name: "Vacation", color: "Blue" },
     ]);
-    prisma.scheduler.findMany.mockResolvedValueOnce([
+    (prisma.scheduler.findMany as jest.Mock).mockResolvedValueOnce([
       { shiftId: "shift1", userId: "user1" },
     ]);
-    prisma.shift.update.mockResolvedValueOnce({
+    (prisma.shift.update as jest.Mock).mockResolvedValueOnce({
       name: "Vacation",
       color: "Blue",
     });
-    prisma.timeOff.update.mockResolvedValueOnce({
+    (prisma.timeOff.update as jest.Mock).mockResolvedValueOnce({
       id: "timeOff1",
       status: "approved",
     });
@@ -100,18 +91,18 @@ describe("POST /api/time-off/{id}", () => {
 
   it("should return 404 if the time-off request is not found", async () => {
     // Setup mocks and request object
-    isAuth.mockResolvedValueOnce(true);
+    (isAuth as jest.Mock).mockResolvedValueOnce(true);
     const req = {
       headers: new Map([["X-User-Id", "user1"]]),
       json: async () => ({ isApproved: true }),
-    };
+    } as unknown as NextRequest;
 
-    prisma.user.findUnique.mockResolvedValueOnce({
+    (prisma.user.findUnique as jest.Mock).mockResolvedValueOnce({
       id: "user1",
       role: { name: "Manager" },
     });
 
-    prisma.timeOff.findUnique.mockResolvedValueOnce(null);
+    (prisma.timeOff.findUnique as jest.Mock).mockResolvedValueOnce(null);
 
     // Call the POST function and await its response
     const response = await POST(req, { params: { id: "nonExistentId" } });
@@ -128,13 +119,13 @@ describe("POST /api/time-off/{id}", () => {
 
   it("should return 403 if user is not authorized", async () => {
     // Setup mocks and request object
-    isAuth.mockResolvedValueOnce(true);
+    (isAuth as jest.Mock).mockResolvedValueOnce(true);
     const req = {
       headers: new Map([["X-User-Id", "user1"]]),
       json: async () => ({ isApproved: true }),
-    };
+    } as unknown as NextRequest;
 
-    prisma.user.findUnique.mockResolvedValueOnce({
+    (prisma.user.findUnique as jest.Mock).mockResolvedValueOnce({
       id: "user1",
       role: { name: "Employee" },
     });
@@ -157,7 +148,7 @@ describe("POST /api/time-off/{id}", () => {
 
 describe("PUT /api/time-off/{id}", () => {
   it("should successfully update a time-off request", async () => {
-    isAuth.mockResolvedValue(true);
+    (isAuth as jest.Mock).mockResolvedValue(true);
     const futureDate = new Date();
     futureDate.setDate(futureDate.getDate() + 10); // Set to 10 days in the future
     const req = {
@@ -167,12 +158,12 @@ describe("PUT /api/time-off/{id}", () => {
         endDate: futureDate.toISOString().split("T")[0],
         shiftType: "Holiday",
       }),
-    };
-    prisma.timeOff.findUnique.mockResolvedValueOnce({
+    } as unknown as NextRequest;
+    (prisma.timeOff.findUnique as jest.Mock).mockResolvedValueOnce({
       userId: "user1",
       status: "pending",
     });
-    prisma.timeOff.update.mockResolvedValueOnce({
+    (prisma.timeOff.update as jest.Mock).mockResolvedValueOnce({
       status: "updated",
     });
 
@@ -187,7 +178,7 @@ describe("PUT /api/time-off/{id}", () => {
   });
 
   it("should return 400 if editing approved time-off request", async () => {
-    isAuth.mockResolvedValueOnce(true);
+    (isAuth as jest.Mock).mockResolvedValueOnce(true);
     const req = {
       headers: new Map([["X-User-Id", "user1"]]),
       json: async () => ({
@@ -195,8 +186,8 @@ describe("PUT /api/time-off/{id}", () => {
         endDate: "2024-01-10",
         shiftType: "Vacation",
       }),
-    };
-    prisma.timeOff.findUnique.mockResolvedValueOnce({
+    } as unknown as NextRequest;
+    (prisma.timeOff.findUnique as jest.Mock).mockResolvedValueOnce({
       userId: "user1",
       status: "approved",
     });
@@ -212,7 +203,7 @@ describe("PUT /api/time-off/{id}", () => {
   });
 
   it("should return 403 if the user is not the one tied to the time-off request", async () => {
-    isAuth.mockResolvedValue(true);
+    (isAuth as jest.Mock).mockResolvedValue(true);
     const req = {
       headers: new Map([["X-User-Id", "user2"]]), // Different user ID
       json: async () => ({
@@ -220,8 +211,8 @@ describe("PUT /api/time-off/{id}", () => {
         endDate: "2024-12-25",
         shiftType: "Holiday",
       }),
-    };
-    prisma.timeOff.findUnique.mockResolvedValueOnce({
+    } as unknown as NextRequest;
+    (prisma.timeOff.findUnique as jest.Mock).mockResolvedValueOnce({
       userId: "user1", // Original user ID
       status: "pending",
     });
@@ -237,11 +228,11 @@ describe("PUT /api/time-off/{id}", () => {
   });
 
   it("should return 404 if the time-off request is not found", async () => {
-    isAuth.mockResolvedValue(true); // Assume user is authenticated
+    (isAuth as jest.Mock).mockResolvedValue(true); // Assume user is authenticated
     const req = {
       headers: new Map([["X-User-Id", "user1"]]),
-    };
-    prisma.timeOff.findUnique.mockResolvedValueOnce(null); // No time-off request found
+    } as unknown as NextRequest;
+    (prisma.timeOff.findUnique as jest.Mock).mockResolvedValueOnce(null); // No time-off request found
 
     const response = await PUT(req, { params: { id: "nonexistentId" } });
     const jsonResponse = await response.json();
@@ -254,7 +245,7 @@ describe("PUT /api/time-off/{id}", () => {
   });
 
   it("should return 400 if the start date is in the past", async () => {
-    isAuth.mockResolvedValue(true);
+    (isAuth as jest.Mock).mockResolvedValue(true);
     const pastDate = new Date();
     pastDate.setDate(pastDate.getDate() - 1); // Set to yesterday
     const req = {
@@ -264,8 +255,8 @@ describe("PUT /api/time-off/{id}", () => {
         endDate: "2024-12-30",
         shiftType: "Holiday",
       }),
-    };
-    prisma.timeOff.findUnique.mockResolvedValueOnce({
+    } as unknown as NextRequest;
+    (prisma.timeOff.findUnique as jest.Mock).mockResolvedValueOnce({
       userId: "user1",
       status: "pending",
     });
@@ -281,7 +272,7 @@ describe("PUT /api/time-off/{id}", () => {
   });
 
   it("should create a new request with pending status when editing a declined time-off request", async () => {
-    isAuth.mockResolvedValue(true);
+    (isAuth as jest.Mock).mockResolvedValue(true);
     const req = {
       headers: new Map([["X-User-Id", "user1"]]),
       json: async () => ({
@@ -289,12 +280,12 @@ describe("PUT /api/time-off/{id}", () => {
         endDate: "2024-12-25",
         shiftType: "Holiday",
       }),
-    };
-    prisma.timeOff.findUnique.mockResolvedValueOnce({
+    } as unknown as NextRequest;
+    (prisma.timeOff.findUnique as jest.Mock).mockResolvedValueOnce({
       userId: "user1",
       status: "declined",
     });
-    prisma.timeOff.create.mockResolvedValueOnce({
+    (prisma.timeOff.create as jest.Mock).mockResolvedValueOnce({
       status: "pending",
     });
 
@@ -312,15 +303,15 @@ describe("PUT /api/time-off/{id}", () => {
 
 describe("DELETE /api/time-off/{id}", () => {
   it("should successfully delete a pending time-off request", async () => {
-    isAuth.mockResolvedValue(true);
+    (isAuth as jest.Mock).mockResolvedValue(true);
     const req = {
       headers: new Map([["X-User-Id", "user1"]]), // User ID matches the one on the request
-    };
-    prisma.timeOff.findUnique.mockResolvedValueOnce({
+    } as unknown as NextRequest;
+    (prisma.timeOff.findUnique as jest.Mock).mockResolvedValueOnce({
       userId: "user1", // Same user
       status: "pending",
     });
-    prisma.timeOff.delete.mockResolvedValueOnce({}); // Simulate successful deletion
+    (prisma.timeOff.delete as jest.Mock).mockResolvedValueOnce({}); // Simulate successful deletion
 
     const response = await DELETE(req, { params: { id: "timeOff1" } });
     const jsonResponse = await response.json(); // Await the JSON response
@@ -331,11 +322,11 @@ describe("DELETE /api/time-off/{id}", () => {
   });
 
   it("should return 400 if request is not pending", async () => {
-    isAuth.mockResolvedValueOnce(true);
+    (isAuth as jest.Mock).mockResolvedValueOnce(true);
     const req = {
       headers: new Map([["X-User-Id", "user1"]]),
-    };
-    prisma.timeOff.findUnique.mockResolvedValueOnce({
+    } as unknown as NextRequest;
+    (prisma.timeOff.findUnique as jest.Mock).mockResolvedValueOnce({
       userId: "user1",
       status: "approved",
     });
@@ -351,11 +342,11 @@ describe("DELETE /api/time-off/{id}", () => {
   });
 
   it("should return 403 if the time-off request is not created by the user attempting to delete it", async () => {
-    isAuth.mockResolvedValue(true);
+    (isAuth as jest.Mock).mockResolvedValue(true);
     const req = {
       headers: new Map([["X-User-Id", "user2"]]), // User ID does not match the one on the request
-    };
-    prisma.timeOff.findUnique.mockResolvedValueOnce({
+    } as unknown as NextRequest;
+    (prisma.timeOff.findUnique as jest.Mock).mockResolvedValueOnce({
       userId: "user1", // Different user
       status: "pending",
     });
@@ -369,11 +360,11 @@ describe("DELETE /api/time-off/{id}", () => {
   });
 
   it("should return 404 if the time-off request is not found", async () => {
-    isAuth.mockResolvedValue(true); // Assume user is authenticated
+    (isAuth as jest.Mock).mockResolvedValue(true); // Assume user is authenticated
     const req = {
       headers: new Map([["X-User-Id", "user1"]]),
-    };
-    prisma.timeOff.findUnique.mockResolvedValueOnce(null); // No time-off request found
+    } as unknown as NextRequest;
+    (prisma.timeOff.findUnique as jest.Mock).mockResolvedValueOnce(null); // No time-off request found
 
     const response = await DELETE(req, { params: { id: "nonexistentId" } });
     const jsonResponse = await response.json(); // Await the JSON response

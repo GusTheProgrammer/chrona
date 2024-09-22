@@ -26,22 +26,13 @@ jest.mock("@/lib/helpers", () => ({
   }),
 }));
 
-jest.mock("next/server", () => ({
-  NextResponse: {
-    json: jest.fn().mockImplementation((data, options) => ({
-      json: () => Promise.resolve(data),
-      status: options.status,
-    })),
-  },
-}));
-
 describe("POST /api/auth/login", () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
   it("should log in successfully and return user data and permissions", async () => {
-    prisma.user.findUnique.mockResolvedValueOnce({
+    (prisma.user.findUnique as jest.Mock).mockResolvedValueOnce({
       id: "user1",
       email: "jane@example.com",
       password: "hashedPassword",
@@ -49,22 +40,26 @@ describe("POST /api/auth/login", () => {
       blocked: false,
       roleId: "role1",
     });
-    matchPassword.mockResolvedValueOnce(true);
-    prisma.role.findFirst.mockResolvedValueOnce({
+    (matchPassword as jest.Mock).mockResolvedValueOnce(true);
+    (prisma.role.findFirst as jest.Mock).mockResolvedValueOnce({
       id: "role1",
       type: "User",
       clientPermissions: [
         { menu: "dashboard", path: "/dashboard", name: "Dashboard", sort: 1 },
       ],
     });
-    generateToken.mockResolvedValueOnce("token123");
+    (generateToken as jest.Mock).mockResolvedValueOnce("token123");
 
-    const req = {
-      json: async () => ({
+    const req = new Request("http://localhost/api/auth/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
         email: "jane@example.com",
         password: "correctPassword",
       }),
-    };
+    });
 
     const response = await POST(req);
     const body = await response.json();
@@ -103,13 +98,18 @@ describe("POST /api/auth/login", () => {
   });
 
   it("should return an error for invalid email or password", async () => {
-    prisma.user.findUnique.mockResolvedValueOnce(null);
-    const req = {
-      json: async () => ({
+    (prisma.user.findUnique as jest.Mock).mockResolvedValueOnce(null);
+
+    const req = new Request("http://localhost/api/auth/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
         email: "nonexistent@example.com",
         password: "wrongpassword123",
       }),
-    };
+    });
 
     const response = await POST(req);
     const body = await response.json();
@@ -119,18 +119,22 @@ describe("POST /api/auth/login", () => {
   });
 
   it("should return an error if password does not match", async () => {
-    prisma.user.findUnique.mockResolvedValueOnce({
+    (prisma.user.findUnique as jest.Mock).mockResolvedValueOnce({
       email: "jane@example.com",
       password: "hashedPassword",
     });
-    matchPassword.mockResolvedValueOnce(false);
+    (matchPassword as jest.Mock).mockResolvedValueOnce(false);
 
-    const req = {
-      json: async () => ({
+    const req = new Request("http://localhost/api/auth/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
         email: "jane@example.com",
         password: "incorrectPassword",
       }),
-    };
+    });
 
     const response = await POST(req);
     const body = await response.json();
@@ -140,19 +144,23 @@ describe("POST /api/auth/login", () => {
   });
 
   it("should handle blocked user", async () => {
-    prisma.user.findUnique.mockResolvedValueOnce({
+    (prisma.user.findUnique as jest.Mock).mockResolvedValueOnce({
       email: "jane@example.com",
       password: "hashedPassword",
       blocked: true,
     });
-    matchPassword.mockResolvedValueOnce(true);
+    (matchPassword as jest.Mock).mockResolvedValueOnce(true);
 
-    const req = {
-      json: async () => ({
+    const req = new Request("http://localhost/api/auth/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
         email: "jane@example.com",
         password: "correctPassword",
       }),
-    };
+    });
 
     const response = await POST(req);
     const body = await response.json();
@@ -162,19 +170,23 @@ describe("POST /api/auth/login", () => {
   });
 
   it("should handle unconfirmed user", async () => {
-    prisma.user.findUnique.mockResolvedValueOnce({
+    (prisma.user.findUnique as jest.Mock).mockResolvedValueOnce({
       email: "jane@example.com",
       password: "hashedPassword",
       confirmed: false,
     });
-    matchPassword.mockResolvedValueOnce(true);
+    (matchPassword as jest.Mock).mockResolvedValueOnce(true);
 
-    const req = {
-      json: async () => ({
+    const req = new Request("http://localhost/api/auth/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
         email: "jane@example.com",
         password: "correctPassword",
       }),
-    };
+    });
 
     const response = await POST(req);
     const body = await response.json();
@@ -184,20 +196,24 @@ describe("POST /api/auth/login", () => {
   });
 
   it("should handle missing role", async () => {
-    prisma.user.findUnique.mockResolvedValueOnce({
+    (prisma.user.findUnique as jest.Mock).mockResolvedValueOnce({
       email: "jane@example.com",
       password: "hashedPassword",
       confirmed: true,
     });
-    matchPassword.mockResolvedValueOnce(true);
-    prisma.role.findFirst.mockResolvedValueOnce(null);
+    (matchPassword as jest.Mock).mockResolvedValueOnce(true);
+    (prisma.role.findFirst as jest.Mock).mockResolvedValueOnce(null);
 
-    const req = {
-      json: async () => ({
+    const req = new Request("http://localhost/api/auth/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
         email: "jane@example.com",
         password: "correctPassword",
       }),
-    };
+    });
 
     const response = await POST(req);
     const body = await response.json();

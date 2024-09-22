@@ -4,7 +4,7 @@
 import { PUT, DELETE } from "@/app/api/permissions/[id]/route";
 import { prisma } from "@/lib/prisma.db";
 import { isAuth } from "@/lib/auth";
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 
 jest.mock("@/lib/prisma.db", () => ({
   prisma: {
@@ -21,28 +21,19 @@ jest.mock("@/lib/auth", () => ({
   isAuth: jest.fn(),
 }));
 
-jest.mock("next/server", () => ({
-  NextResponse: {
-    json: jest.fn((data) => ({
-      json: () => Promise.resolve(data),
-      status: 200,
-    })),
-  },
-}));
-
 describe("PUT /api/permissions/{id}", () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
   it("should update a permission successfully", async () => {
-    isAuth.mockResolvedValue(true);
-    prisma.permission.findUnique.mockResolvedValue({
+    (isAuth as jest.Mock).mockResolvedValue(true);
+    (prisma.permission.findUnique as jest.Mock).mockResolvedValue({
       id: "1",
       name: "Test Permission",
     });
-    prisma.permission.findFirst.mockResolvedValue(null);
-    prisma.permission.update.mockResolvedValue({
+    (prisma.permission.findFirst as jest.Mock).mockResolvedValue(null);
+    (prisma.permission.update as jest.Mock).mockResolvedValue({
       id: "1",
       name: "Updated Test Permission",
     });
@@ -54,8 +45,7 @@ describe("PUT /api/permissions/{id}", () => {
         route: "/api/test",
         description: "Updated description",
       }),
-      params: { id: "1" },
-    };
+    } as unknown as NextRequest;
 
     const response = await PUT(req, { params: { id: "1" } });
     const body = await response.json();
@@ -74,15 +64,14 @@ describe("PUT /api/permissions/{id}", () => {
   });
 
   it("should return 404 if the permission is not found", async () => {
-    isAuth.mockResolvedValue(true);
-    prisma.permission.findUnique.mockResolvedValue(null);
+    (isAuth as jest.Mock).mockResolvedValue(true);
+    (prisma.permission.findUnique as jest.Mock).mockResolvedValue(null);
 
     const req = {
       json: async () => ({
         name: "Nonexistent Permission",
       }),
-      params: { id: "nonexistent" },
-    };
+    } as unknown as NextRequest;
 
     const response = await PUT(req, { params: { id: "nonexistent" } });
     expect(response.status).toBe(404);
@@ -91,12 +80,12 @@ describe("PUT /api/permissions/{id}", () => {
   });
 
   it("should return 409 if there is a permission path conflict", async () => {
-    isAuth.mockResolvedValue(true);
-    prisma.permission.findUnique.mockResolvedValue({
+    (isAuth as jest.Mock).mockResolvedValue(true);
+    (prisma.permission.findUnique as jest.Mock).mockResolvedValue({
       id: "1",
       name: "Existing Permission",
     });
-    prisma.permission.findFirst.mockResolvedValue({
+    (prisma.permission.findFirst as jest.Mock).mockResolvedValue({
       id: "2",
       name: "Another Permission",
     });
@@ -108,8 +97,7 @@ describe("PUT /api/permissions/{id}", () => {
         route: "/api/existing",
         description: "A conflicting permission",
       }),
-      params: { id: "1" },
-    };
+    } as unknown as NextRequest;
 
     const response = await PUT(req, { params: { id: "1" } });
     expect(response.status).toBe(500);
@@ -120,15 +108,13 @@ describe("PUT /api/permissions/{id}", () => {
 
 describe("DELETE /api/permissions/{id}", () => {
   it("should delete a permission successfully", async () => {
-    isAuth.mockResolvedValue(true);
-    prisma.permission.delete.mockResolvedValue({
+    (isAuth as jest.Mock).mockResolvedValue(true);
+    (prisma.permission.delete as jest.Mock).mockResolvedValue({
       id: "1",
       name: "Deleted Permission",
     });
 
-    const req = {
-      params: { id: "1" },
-    };
+    const req = {} as unknown as NextRequest;
 
     const response = await DELETE(req, { params: { id: "1" } });
     const body = await response.json();
@@ -137,14 +123,12 @@ describe("DELETE /api/permissions/{id}", () => {
   });
 
   it("should return 404 if the permission to delete is not found", async () => {
-    isAuth.mockResolvedValue(true);
-    prisma.permission.delete.mockRejectedValue(
+    (isAuth as jest.Mock).mockResolvedValue(true);
+    (prisma.permission.delete as jest.Mock).mockRejectedValue(
       new Error("Permission not found")
     );
 
-    const req = {
-      params: { id: "nonexistent" },
-    };
+    const req = {} as unknown as NextRequest;
 
     const response = await DELETE(req, { params: { id: "nonexistent" } });
     expect(response.status).toBe(500);
