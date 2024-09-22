@@ -84,7 +84,25 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Check if release exists
+        id: release_check
+        uses: actions/github-script@v6
+        with:
+          script: |
+            try {
+              const release = await github.rest.repos.getReleaseByTag({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                tag: '${{ needs.prepare_release.outputs.new_version }}',
+              });
+              return { exists: true };
+            } catch (error) {
+              return { exists: false };
+            }
+          result-encoding: string
+
       - name: Create release
+        if: steps.release_check.outputs.exists == 'false'
         uses: actions/github-script@v6
         with:
           script: |
