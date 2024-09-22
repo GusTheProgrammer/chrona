@@ -183,7 +183,7 @@ export async function POST(
     if (isApproved) {
       const schedulersToUpdate = await prisma.scheduler.findMany({
         where: {
-          userId: userId,
+          userId: timeOffRequest.userId,
           date: {
             gte: timeOffRequest.startDate,
             lte: timeOffRequest.endDate,

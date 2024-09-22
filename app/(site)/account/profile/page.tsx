@@ -45,7 +45,17 @@ const Profile = () => {
     .object({
       name: z.string(),
       address: z.string(),
-      mobile: z.number(),
+      mobile: z
+        .string()
+        .refine(
+          (val) =>
+            /^(?:\+?\d{1,3})?[- .]?\(?(?:\d{3})?\)?[- .]?\d{3}[- .]?\d{4}$/.test(
+              val
+            ),
+          {
+            message: "Invalid phone number format",
+          }
+        ),
       bio: z.string(),
       password: z.string().refine((val) => val.length === 0 || val.length > 6, {
         message: "Password can't be less than 6 characters",
@@ -66,7 +76,7 @@ const Profile = () => {
     defaultValues: {
       name: "",
       address: "",
-      mobile: 0,
+      mobile: "",
       bio: "",
       password: "",
       confirmPassword: "",
@@ -74,8 +84,10 @@ const Profile = () => {
   });
 
   function onSubmit(values: z.infer<typeof FormSchema>) {
+    const mobileAsInt = values.mobile.replace(/\D/g, "");
     updateApi?.mutateAsync({
       ...values,
+      mobile: parseInt(mobileAsInt, 10),
       id: getApi?.data?.id,
       image: fileLink ? fileLink[0] : getApi?.data?.image,
     });
@@ -166,8 +178,7 @@ const Profile = () => {
                   name="mobile"
                   label="Mobile"
                   placeholder="Enter mobile"
-                  type="number"
-                  step="0.01"
+                  type="text"
                 />
               </div>
 
