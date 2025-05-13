@@ -9,7 +9,7 @@ on:
 env:
   GH_REGISTRY: ghcr.io/gustheprogrammer
   IMAGE_NAME: chrona-app
-  NEXT_PUBLIC_API_URL: "https://chrona.gusondabus.com/api"
+  NEXT_PUBLIC_API_URL: "https://chrona.rosetta.software.com/api"
 
 jobs:
   prepare_release:
