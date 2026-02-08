@@ -5,10 +5,10 @@ DECLARE
     date_counter DATE;
 BEGIN
     -- Set the date counter to start from January 1, 2024
-    date_counter := '2024-01-01';
+    date_counter := CURRENT_DATE;
 
-    -- Loop through each day for two years to create unique shifts and assign to schedulers
-    FOR i IN 1..730 LOOP -- 365 days * 2 years
+    -- Loop through each day for 30 days to create shifts and assign to schedulers
+    FOR i IN 1..30 LOOP -- 30 days only 
         -- Generate a unique shift ID using the 'nanoid' function
         new_shift_id := nanoid();
 

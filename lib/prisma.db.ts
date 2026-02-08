@@ -4,7 +4,13 @@ import { PrismaClient, QueryMode } from '@prisma/client'
 let prisma: PrismaClient
 
 if (process.env.NODE_ENV === 'production') {
-  prisma = new PrismaClient()
+  prisma = new PrismaClient({
+    datasources: {
+      db: {
+        url: process.env.DATABASE_URL,
+      },
+    },
+  })
 } else {
   if (!global.prisma) {
     global.prisma = new PrismaClient()

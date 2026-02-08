@@ -10,15 +10,12 @@ import useApi from "@/hooks/useApi";
 import Message from "@/components/Message";
 import Spinner from "@/components/Spinner";
 import useUserInfoStore from "@/zustand/userStore";
-import Upload from "@/components/Upload";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Form } from "@/components/ui/form";
 import CustomFormField, { FormButton } from "@/components/ui/CustomForm";
 
 const Profile = () => {
-  const [fileLink, setFileLink] = React.useState<string[]>([]);
-
   const path = useAuthorization();
   const router = useRouter();
 
@@ -89,7 +86,7 @@ const Profile = () => {
       ...values,
       mobile: parseInt(mobileAsInt, 10),
       id: getApi?.data?.id,
-      image: fileLink ? fileLink[0] : getApi?.data?.image,
+      image: getApi?.data?.image, // Keep existing image
     });
   }
 
@@ -104,7 +101,6 @@ const Profile = () => {
         email,
         image,
       });
-      setFileLink([]);
     }
     // eslint-disable-next-line
   }, [updateApi?.isSuccess]);
@@ -114,7 +110,6 @@ const Profile = () => {
     form.setValue("address", !getApi?.isPending ? getApi?.data?.address : "");
     form.setValue("mobile", !getApi?.isPending ? getApi?.data?.mobile : "");
     form.setValue("bio", !getApi?.isPending ? getApi?.data?.bio : "");
-    setFileLink(!getApi?.isPending ? [getApi?.data?.image] : []);
     // eslint-disable-next-line
   }, [getApi?.isPending, form.setValue]);
 
@@ -195,27 +190,9 @@ const Profile = () => {
               </div>
 
               <div className="w-full md:w-[48%] lg:w-[32%]">
-                <Upload
-                  label="Image"
-                  setFileLink={setFileLink}
-                  fileLink={fileLink}
-                  fileType="image"
-                />
-
-                {fileLink.length > 0 && (
-                  <div className="avatar text-center flex justify-center items-end mt-2">
-                    <div className="w-12 mask mask-squircle">
-                      <Image
-                        src={fileLink?.[0]}
-                        alt="avatar"
-                        width={50}
-                        height={50}
-                        style={{ objectFit: "cover" }}
-                        className="rounded-full"
-                      />
-                    </div>
-                  </div>
-                )}
+                <div className="text-sm text-muted-foreground">
+                  <strong>Note:</strong> Profile image uploads are currently disabled in this deployment configuration.
+                </div>
               </div>
 
               <div className="flex justify-start flex-wrap flex-row w-full gap-2">
