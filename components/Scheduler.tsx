@@ -1,5 +1,7 @@
 "use client";
 
+import dynamic from "next/dynamic";
+
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -36,7 +38,7 @@ import {
 import { differenceInCalendarDays, parse, format } from "date-fns";
 
 import { cn } from "@/lib/utils";
-import { Calendar } from "@/components/ui/calendar";
+const Calendar = dynamic(() => import("@/components/ui/calendar").then((mod) => ({ default: mod.Calendar })), { ssr: false });
 import {
   Popover,
   PopoverContent,

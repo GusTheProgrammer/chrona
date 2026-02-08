@@ -1,11 +1,12 @@
 import * as React from "react";
+import dynamic from "next/dynamic";
 import { CalendarIcon } from "@radix-ui/react-icons";
 import { addDays, format } from "date-fns";
 import { DateRange } from "react-day-picker";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
+const Calendar = dynamic(() => import("@/components/ui/calendar").then((mod) => ({ default: mod.Calendar })), { ssr: false });
 import {
   Popover,
   PopoverContent,

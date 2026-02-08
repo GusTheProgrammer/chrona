@@ -47,8 +47,7 @@ export const getColumns = (
   handleDeleteAction: { (id: string): Promise<void>; (arg0: number): void },
   includeManageColumn = false
 ) => {
-  const role = JSON.parse(localStorage.getItem("userInfo")!).state.userInfo
-    .role;
+  const role = typeof window !== 'undefined' ? JSON.parse(localStorage.getItem("userInfo")!).state.userInfo.role : null;
   const columns: ColumnDef<TimeOffRequest>[] = [
     {
       id: "select",
