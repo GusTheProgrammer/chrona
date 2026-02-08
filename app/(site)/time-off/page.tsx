@@ -1,6 +1,5 @@
 "use client";
 
-import dynamic from "next/dynamic";
 import * as React from "react";
 
 import TimeoffForm from "@/components/TimeoffForm";
@@ -10,6 +9,8 @@ import { DataTable } from "./data-table";
 import { getColumns } from "./columns";
 import { useState } from "react";
 import Message from "@/components/Message";
+
+export const dynamic = 'force-dynamic';
 
 const Page = () => {
   const [selectedTimeOffRequest, setSelectedTimeOffRequest] = useState<{
@@ -197,4 +198,4 @@ const Page = () => {
   );
 };
 
-export default dynamic(() => Promise.resolve(Page), { ssr: false });
+export default Page;

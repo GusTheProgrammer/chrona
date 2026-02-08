@@ -1,6 +1,9 @@
 import React from "react";
 import Meta from "@/components/Meta";
 
+export const dynamic = 'force-dynamic';
+export const dynamicParams = true;
+
 export const metadata = {
   ...Meta({
     title: "Time-Off Requests",
