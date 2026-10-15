@@ -103,7 +103,7 @@ jobs:
           docker push ${{ env.GH_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.prepare_release.outputs.new_version }}
 
       - name: Create or Update GitHub Release
-        uses: actions/github-script@v6
+        uses: actions/github-script@v9
         with:
           script: |
             const newVersion = '${{ needs.prepare_release.outputs.new_version }}';
