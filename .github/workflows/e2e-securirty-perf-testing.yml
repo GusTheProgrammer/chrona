@@ -29,7 +29,7 @@ jobs:
     needs: e2e_tests
     steps:
       - name: ZAP Scan
-        uses: zaproxy/action-full-scan@v0.8.0
+        uses: zaproxy/action-full-scan@v0.13.0
         with:
           target: "https://chrona.me/"
 
@@ -40,7 +40,7 @@ jobs:
     steps:
       - uses: actions/checkout@v1
       - name: Run local k6 load test
-        uses: grafana/k6-action@v0.2.0
+        uses: grafana/k6-action@v0.3.1
         with:
           filename: __tests__/k6/loadTest.js
         env:
@@ -53,7 +53,7 @@ jobs:
     steps:
       - uses: actions/checkout@v1
       - name: Run local k6 spike test
-        uses: grafana/k6-action@v0.2.0
+        uses: grafana/k6-action@v0.3.1
         with:
           filename: __tests__/k6/spikeTest.js
         env:
@@ -66,7 +66,7 @@ jobs:
     steps:
       - uses: actions/checkout@v1
       - name: Run local k6 stress test
-        uses: grafana/k6-action@v0.2.0
+        uses: grafana/k6-action@v0.3.1
         with:
           filename: __tests__/k6/stressTest.js
         env:
